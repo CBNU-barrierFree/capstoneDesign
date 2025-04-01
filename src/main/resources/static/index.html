@@ -1,0 +1,137 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <title>관광지 배리어프리 정보</title>
+    <style>
+        .place {
+          background: #fff;
+          padding: 16px;
+          margin: 10px 0;
+          border-radius: 8px;
+          box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        #map {
+          width: 100%;
+          height: 400px;
+          margin: 20px 0;
+        }
+    </style>
+
+    <!-- ✅ 카카오 지도 API 불러오기 (순서 중요, autoload X) -->
+    <script src="https://dapi.kakao.com/v2/maps/sdk.js?appkey=ec7a521b62d776eb9f9d4089423e63da"></script>
+</head>
+<body>
+
+<h1>🎨 관광지 배리어프리 정보</h1>
+
+<!-- 🔍 검색창 -->
+<input type="text" id="searchInput" placeholder="관광지명 또는 주소 검색"
+       style="width: 300px; padding: 8px; font-size: 16px;">
+<button onclick="filterPlaces()">검색</button>
+
+<!-- 🗺️ 지도 영역 -->
+<div id="map"></div>
+
+<!-- 📄 관광지 리스트 -->
+<div id="places">불러오는 중...</div>
+
+<script>
+    let allPlaces = [];
+    let map;
+    let markers = [];
+
+    // ✅ 지도 초기화
+    function initMap() {
+      const container = document.getElementById('map');
+      const options = {
+        center: new kakao.maps.LatLng(37.5665, 126.9780), // 서울 중심
+        level: 7
+      };
+      map = new kakao.maps.Map(container, options);
+    }
+
+    // ✅ 마커 추가
+    function addMarker(lat, lng, title) {
+      const marker = new kakao.maps.Marker({
+        position: new kakao.maps.LatLng(lat, lng),
+        map: map,
+        title: title
+      });
+      markers.push(marker);
+    }
+
+    // ✅ 기존 마커 제거
+    function clearMarkers() {
+      markers.forEach(marker => marker.setMap(null));
+      markers = [];
+    }
+
+    // ✅ 관광지 출력 함수
+    function renderPlaces(places) {
+      const container = document.getElementById('places');
+      container.innerHTML = '';
+      clearMarkers();
+
+      if (!places || places.length === 0) {
+        container.innerHTML = '관광지 데이터를 불러올 수 없습니다.';
+        return;
+      }
+
+      places.forEach(place => {
+        const div = document.createElement('div');
+        div.className = 'place';
+
+        div.innerHTML = `
+          <h2>${place.title}</h2>
+          <p><strong>📍 주소:</strong> ${place.address}</p>
+          <p><strong>🕒 운영시간:</strong> ${place.description}</p>
+          <p><strong>📅 등록일:</strong> ${place.issuedDate}</p>
+          <p><strong>📞 연락처:</strong> ${place.tel || '정보 없음'}</p>
+          <p><strong>🌐 홈페이지:</strong> ${
+            place.url ? `<a href="http://${place.url}" target="_blank">${place.url}</a>` : '정보 없음'
+          }</p>
+          <p><strong>📁 카테고리:</strong> ${place.category1} / ${place.category2}</p>
+          <p><strong>♿ 배리어프리 정보:</strong> ${place.subDescription}</p>
+          <p><strong>📌 좌표:</strong> ${place.coordinates}</p>
+        `;
+        container.appendChild(div);
+
+        // 좌표 추출해서 마커 추가
+        const coordText = place.coordinates;
+        const match = coordText?.match(/N([\d.]+), E([\d.]+)/);
+        if (match) {
+          const lat = parseFloat(match[1]);
+          const lng = parseFloat(match[2]);
+          addMarker(lat, lng, place.title);
+        }
+      });
+    }
+
+    // ✅ 검색 기능
+    function filterPlaces() {
+      const keyword = document.getElementById('searchInput').value.toLowerCase().trim();
+      const filtered = allPlaces.filter(place =>
+        place.title.toLowerCase().includes(keyword) ||
+        place.address.toLowerCase().includes(keyword)
+      );
+      renderPlaces(filtered);
+    }
+
+    // ✅ 실행 시작
+    initMap(); // 지도 먼저 생성
+
+    fetch('/api/tour') // 백엔드에서 JSON 데이터 받아오기
+      .then(res => res.json())
+      .then(data => {
+        allPlaces = data?.response?.body?.items?.item || [];
+        renderPlaces(allPlaces);
+      })
+      .catch(error => {
+        console.error('API 호출 실패:', error);
+        document.getElementById('places').innerHTML = '데이터를 불러오는 중 오류가 발생했습니다.';
+      });
+</script>
+
+</body>
+</html>
