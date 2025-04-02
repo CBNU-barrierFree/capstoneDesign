@@ -25,6 +25,7 @@ dependencies {
 	compileOnly 'org.projectlombok:lombok' // 코드 간결화용
 	annotationProcessor 'org.projectlombok:lombok'
 
+	implementation 'javax.persistence:javax.persistence-api:2.2'
 	testImplementation 'org.springframework.boot:spring-boot-starter-test'
 	testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
 }
