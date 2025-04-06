@@ -4,128 +4,221 @@
     <meta charset="UTF-8">
     <title>관광지 배리어프리 정보</title>
     <style>
+        #places {
+          display: grid;
+          grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+          gap: 16px;
+          margin-top: 16px;
+        }
         .place {
           background: #fff;
           padding: 16px;
-          margin: 10px 0;
           border-radius: 8px;
           box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+          cursor: pointer;
+          position: relative;
+        }
+        .place:hover {
+          background: #f0f8ff;
+        }
+        .favorite {
+          position: absolute;
+          top: 12px;
+          right: 12px;
+          font-size: 20px;
+          cursor: pointer;
+        }
+        .favorite.active {
+          color: gold;
         }
         #map {
           width: 100%;
           height: 400px;
           margin: 20px 0;
         }
+        .filters {
+          display: flex;
+          flex-wrap: wrap;
+          gap: 16px;
+          margin-top: 10px;
+        }
+        .filters label {
+          white-space: nowrap;
+        }
+        .pagination {
+          margin-top: 20px;
+          text-align: center;
+          grid-column: 1 / -1;
+        }
+        .pagination button {
+          margin: 4px;
+          padding: 6px 12px;
+          cursor: pointer;
+        }
+        .pagination button:disabled {
+          font-weight: bold;
+          background: #eee;
+        }
     </style>
-
-    <!-- ✅ 카카오 지도 API 불러오기 (순서 중요, autoload X) -->
-    <script src="https://dapi.kakao.com/v2/maps/sdk.js?appkey=ec7a521b62d776eb9f9d4089423e63da"></script>
+    <script src="https://dapi.kakao.com/v2/maps/sdk.js?appkey=ec7a521b62d776eb9f9d4089423e63da&libraries=clusterer"></script>
 </head>
 <body>
 
-<h1>🎨 관광지 배리어프리 정보</h1>
+<h1>🎨 관광지 바리어프리 정보</h1>
 
-<!-- 🔍 검색창 -->
 <input type="text" id="searchInput" placeholder="관광지명 또는 주소 검색"
        style="width: 300px; padding: 8px; font-size: 16px;">
-<button onclick="filterPlaces()">검색</button>
 
-<!-- 🗺️ 지도 영역 -->
+<div class="filters">
+    <label><input type="checkbox" class="barrier-filter" value="휠체어 대여 가능"> 휠체어 대여 가능</label>
+    <label><input type="checkbox" class="barrier-filter" value="장애인 화장실 있음"> 장애인 화장실 있음</label>
+    <label><input type="checkbox" class="barrier-filter" value="장애인 주차구역 있음"> 장애인 주차구역 있음</label>
+    <label><input type="checkbox" class="barrier-filter" value="시각장애인 안내견 동반 가능"> 안내견 동반 가능</label>
+    <label><input type="checkbox" class="barrier-filter" value="장애인 안내 점자 있음"> 점자 안내 있음</label>
+    <label><input type="checkbox" class="barrier-filter" value="오디오 가이드 있음(한국어)"> 오디오 가이드</label>
+    <label><input type="checkbox" id="favoriteOnly"> ✨ 즐겨찾기만 보기</label>
+</div>
+
 <div id="map"></div>
-
-<!-- 📄 관광지 리스트 -->
 <div id="places">불러오는 중...</div>
 
 <script>
     let allPlaces = [];
-    let map;
-    let markers = [];
+    let filteredPlaces = [];
+    let currentPage = 1;
+    const itemsPerPage = 10;
+    let map, clusterer;
+    const favorites = JSON.parse(localStorage.getItem('favorites') || '[]');
 
-    // ✅ 지도 초기화
+    function toggleFavorite(title) {
+      const index = favorites.indexOf(title);
+      if (index > -1) favorites.splice(index, 1);
+      else favorites.push(title);
+      localStorage.setItem('favorites', JSON.stringify(favorites));
+      filterPlaces();
+    }
+
     function initMap() {
       const container = document.getElementById('map');
       const options = {
-        center: new kakao.maps.LatLng(37.5665, 126.9780), // 서울 중심
+        center: new kakao.maps.LatLng(37.5665, 126.9780),
         level: 7
       };
       map = new kakao.maps.Map(container, options);
+      clusterer = new kakao.maps.MarkerClusterer({ map, averageCenter: true, minLevel: 5 });
+
+      kakao.maps.event.addListener(map, 'idle', filterPlaces); // ✅ 지도 이동 후 필터링 적용
     }
 
-    // ✅ 마커 추가
-    function addMarker(lat, lng, title) {
-      const marker = new kakao.maps.Marker({
-        position: new kakao.maps.LatLng(lat, lng),
-        map: map,
-        title: title
+    function addAllMarkers(places) {
+      clusterer.clear();
+      const markerList = [];
+      places.forEach(place => {
+        const match = place.coordinates?.match(/N([\d.]+), E([\d.]+)/);
+        if (match) {
+          const lat = parseFloat(match[1]);
+          const lng = parseFloat(match[2]);
+          const latlng = new kakao.maps.LatLng(lat, lng);
+          const marker = new kakao.maps.Marker({ position: latlng, title: place.title });
+          const infowindow = new kakao.maps.InfoWindow({ content: `<div style='padding:8px;font-size:14px;'><strong>${place.title}</strong></div>` });
+          kakao.maps.event.addListener(marker, 'mouseover', () => infowindow.open(map, marker));
+          kakao.maps.event.addListener(marker, 'mouseout', () => infowindow.close());
+          markerList.push(marker);
+        }
       });
-      markers.push(marker);
+      clusterer.addMarkers(markerList);
     }
 
-    // ✅ 기존 마커 제거
-    function clearMarkers() {
-      markers.forEach(marker => marker.setMap(null));
-      markers = [];
+    function renderPagination(totalItems) {
+      const totalPages = Math.ceil(totalItems / itemsPerPage);
+      const pagination = document.createElement('div');
+      pagination.className = 'pagination';
+      for (let i = 1; i <= totalPages; i++) {
+        const btn = document.createElement('button');
+        btn.textContent = i;
+        if (i === currentPage) btn.disabled = true;
+        btn.addEventListener('click', () => {
+          currentPage = i;
+          renderPlaces(filteredPlaces);
+        });
+        pagination.appendChild(btn);
+      }
+      document.getElementById('places').appendChild(pagination);
     }
 
-    // ✅ 관광지 출력 함수
     function renderPlaces(places) {
       const container = document.getElementById('places');
       container.innerHTML = '';
-      clearMarkers();
+      const start = (currentPage - 1) * itemsPerPage;
+      const pageItems = places.slice(start, start + itemsPerPage);
 
-      if (!places || places.length === 0) {
-        container.innerHTML = '관광지 데이터를 불러올 수 없습니다.';
-        return;
-      }
-
-      places.forEach(place => {
+      pageItems.forEach(place => {
         const div = document.createElement('div');
         div.className = 'place';
+        const isFav = favorites.includes(place.title);
 
         div.innerHTML = `
+          <div class="favorite ${isFav ? 'active' : ''}" onclick="toggleFavorite('${place.title}')">
+            ${isFav ? '★' : '☆'}
+          </div>
           <h2>${place.title}</h2>
           <p><strong>📍 주소:</strong> ${place.address}</p>
           <p><strong>🕒 운영시간:</strong> ${place.description}</p>
           <p><strong>📅 등록일:</strong> ${place.issuedDate}</p>
           <p><strong>📞 연락처:</strong> ${place.tel || '정보 없음'}</p>
-          <p><strong>🌐 홈페이지:</strong> ${
-            place.url ? `<a href="http://${place.url}" target="_blank">${place.url}</a>` : '정보 없음'
-          }</p>
+          <p><strong>🌐 홈페이지:</strong> ${place.url ? `<a href='http://${place.url}' target='_blank'>${place.url}</a>` : '정보 없음'}</p>
           <p><strong>📁 카테고리:</strong> ${place.category1} / ${place.category2}</p>
           <p><strong>♿ 배리어프리 정보:</strong> ${place.subDescription}</p>
           <p><strong>📌 좌표:</strong> ${place.coordinates}</p>
         `;
         container.appendChild(div);
-
-        // 좌표 추출해서 마커 추가
-        const coordText = place.coordinates;
-        const match = coordText?.match(/N([\d.]+), E([\d.]+)/);
-        if (match) {
-          const lat = parseFloat(match[1]);
-          const lng = parseFloat(match[2]);
-          addMarker(lat, lng, place.title);
-        }
       });
+
+      renderPagination(places.length);
+      addAllMarkers(places);
     }
 
-    // ✅ 검색 기능
     function filterPlaces() {
       const keyword = document.getElementById('searchInput').value.toLowerCase().trim();
-      const filtered = allPlaces.filter(place =>
-        place.title.toLowerCase().includes(keyword) ||
-        place.address.toLowerCase().includes(keyword)
-      );
-      renderPlaces(filtered);
+      const checkedFilters = Array.from(document.querySelectorAll('.barrier-filter:checked')).map(cb => cb.value);
+      const favoriteOnly = document.getElementById('favoriteOnly').checked;
+
+      const bounds = map.getBounds();
+
+      filteredPlaces = allPlaces.filter(place => {
+        const titleMatch = place.title.toLowerCase().includes(keyword);
+        const addressMatch = place.address.toLowerCase().includes(keyword);
+        const sub = place.subDescription || '';
+        const filtersPass = checkedFilters.every(term => sub.includes(term));
+        const favoritePass = !favoriteOnly || favorites.includes(place.title);
+
+        const match = place.coordinates?.match(/N([\d.]+), E([\d.]+)/);
+        let inMapBounds = true;
+        if (match) {
+          const latlng = new kakao.maps.LatLng(parseFloat(match[1]), parseFloat(match[2]));
+          inMapBounds = bounds.contain(latlng);
+        }
+
+        return (titleMatch || addressMatch) && filtersPass && favoritePass && inMapBounds;
+      });
+
+      currentPage = 1;
+      renderPlaces(filteredPlaces);
     }
 
-    // ✅ 실행 시작
-    initMap(); // 지도 먼저 생성
+    document.addEventListener('DOMContentLoaded', () => {
+      document.getElementById('searchInput').addEventListener('input', filterPlaces);
+      document.querySelectorAll('.barrier-filter').forEach(cb => cb.addEventListener('change', filterPlaces));
+      document.getElementById('favoriteOnly').addEventListener('change', filterPlaces);
+    });
 
-    fetch('/api/tour') // 백엔드에서 JSON 데이터 받아오기
+    initMap();
+    fetch('/api/tour')
       .then(res => res.json())
       .then(data => {
         allPlaces = data?.response?.body?.items?.item || [];
-        renderPlaces(allPlaces);
+        filteredPlaces = allPlaces;
+        renderPlaces(filteredPlaces);
       })
       .catch(error => {
         console.error('API 호출 실패:', error);
