@@ -1,18 +1,18 @@
 package com.example.demo.DTO;
 
-import java.util.List;
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import com.fasterxml.jackson.annotation.JsonProperty;
 
+@JsonIgnoreProperties(ignoreUnknown = true)
 public class TourApiResponseDTO {
-    private List<TourDTO> tours;
+
+    @JsonProperty("header")
     private Header header;
+
+    @JsonProperty("body")
     private Body body;
 
-    public List<TourDTO> getTours() {
-        return tours;
-    }
-    public void setTours(List<TourDTO> tours) {
-        this.tours = tours;
-    }
+    // Getters and Setters
     public Header getHeader() {
         return header;
     }

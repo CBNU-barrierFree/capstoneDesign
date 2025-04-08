@@ -17,37 +17,41 @@ public class TourService {
         this.tourRepository = tourRepository;
         this.restTemplate = restTemplate;
     }
+
     public void fetchAndSaveAllTours() {
         int pageNo = 1;
         int numOfRows = 10;
-        int totalCount = Integer.MAX_VALUE; // 초기값은 매우 큰 값으로 설정
+        int totalCount = Integer.MAX_VALUE; // 초기값은 매우 큰 값
+
         while ((pageNo - 1) * numOfRows < totalCount) {
             String url = "http://api.kcisa.kr/openapi/API_TOU_049/request"
-                    + "?serviceKey=c0957f50-2a47-448e-b35a-7c0aa5415680"
+                    + "?serviceKey=c0957f50-2a47-448e-b35a-7c0aa5415680"  // 실제 서비스 키로 대체
                     + "&numOfRows=" + numOfRows
                     + "&pageNo=" + pageNo;
+            // 필요하다면 "&_type=json" 파라미터 추가 가능
+            // + "&_type=json";
 
-            // API 호출
-            TourApiResponseDTO apiResponse = restTemplate.getForObject(url, TourApiResponseDTO.class);
-            if (apiResponse == null || apiResponse.getBody() == null
-                    || apiResponse.getBody().getItems() == null
-                    || apiResponse.getBody().getItems().getItem() == null) {
-                break; // 응답이 없으면 종료
+            // JSON 응답을 요청하기 위해 Accept 헤더를 지정하는 방법은,
+            // RestTemplate에 인터셉터를 추가하거나 클라이언트별로 설정할 수 있으나,
+            // 기본적으로 스프링의 MappingJackson2HttpMessageConverter가 적용되므로,
+            // URL이나 환경에 따라 JSON 응답이 반환된다면 별도 설정 없이도 매핑됩니다.
+
+            TourApiResponseDTO tourResponse = restTemplate.getForObject(url, TourApiResponseDTO.class);
+            if (tourResponse == null || tourResponse.getBody() == null ||
+                    tourResponse.getBody().getItems() == null ||
+                    tourResponse.getBody().getItems().getItem() == null) {
+                break; // 응답이 올바르지 않으면 종료
             }
 
-            // 응답에서 전체 개수(totalCount)를 추출 (문자열이라면 숫자로 변환)
             try {
-                totalCount = Integer.parseInt(apiResponse.getBody().getTotalCount());
+                totalCount = Integer.parseInt(tourResponse.getBody().getTotalCount());
             } catch (NumberFormatException e) {
-                // totalCount 파싱 실패시 break 처리
                 break;
             }
 
-            // 현재 페이지의 데이터 처리
-            for (TourDTO dto : apiResponse.getBody().getItems().getItem()) {
+            for (TourDTO dto : tourResponse.getBody().getItems().getItem()) {
                 TourEntity entity = new TourEntity();
                 entity.setTitle(dto.getTitle());
-                // 필요한 필드들을 매핑합니다.
                 entity.setIssuedDate(dto.getIssuedDate());
                 entity.setCategory1(dto.getCategory1());
                 entity.setCategory2(dto.getCategory2());
@@ -58,11 +62,10 @@ public class TourService {
                 entity.setUrl(dto.getUrl());
                 entity.setAddress(dto.getAddress());
                 entity.setCoordinates(dto.getCoordinates());
-
                 tourRepository.save(entity);
             }
             System.out.println("Page " + pageNo + " 저장 완료");
-            pageNo++; // 다음 페이지 호출
+            pageNo++;
         }
     }
 

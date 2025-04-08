@@ -1,6 +1,8 @@
 package com.example.demo.DTO;
 
-// DB DTO 객체
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+
+@JsonIgnoreProperties(ignoreUnknown = true)
 public class TourDTO {
     private String title;
     private String issuedDate;
@@ -14,6 +16,7 @@ public class TourDTO {
     private String address;
     private String coordinates;
 
+    // Getters and Setters
     public String getTitle() {
         return title;
     }
