@@ -1,5 +1,6 @@
 package com.example.demo.DTO;
 
+// DB DTO 객체
 public class TourDTO {
     private String title;
     private String issuedDate;
