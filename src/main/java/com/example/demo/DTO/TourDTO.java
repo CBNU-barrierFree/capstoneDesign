@@ -1,9 +1,14 @@
 package com.example.demo.DTO;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import lombok.Getter;
+import lombok.Setter;
 
+@Getter
+@Setter
 @JsonIgnoreProperties(ignoreUnknown = true)
 public class TourDTO {
+
     private String title;
     private String issuedDate;
     private String category1;
@@ -16,71 +21,21 @@ public class TourDTO {
     private String address;
     private String coordinates;
 
-    // Getters and Setters
-    public String getTitle() {
-        return title;
-    }
-    public void setTitle(String title) {
-        this.title = title;
-    }
-    public String getIssuedDate() {
-        return issuedDate;
-    }
-    public void setIssuedDate(String issuedDate) {
-        this.issuedDate = issuedDate;
-    }
-    public String getCategory1() {
-        return category1;
-    }
-    public void setCategory1(String category1) {
-        this.category1 = category1;
-    }
-    public String getCategory2() {
-        return category2;
-    }
-    public void setCategory2(String category2) {
-        this.category2 = category2;
-    }
-    public String getCategory3() {
-        return category3;
-    }
-    public void setCategory3(String category3) {
-        this.category3 = category3;
-    }
-    public String getDescription() {
-        return description;
-    }
-    public void setDescription(String description) {
-        this.description = description;
-    }
-    public String getSubDescription() {
-        return subDescription;
-    }
-    public void setSubDescription(String subDescription) {
-        this.subDescription = subDescription;
-    }
-    public String getTel() {
-        return tel;
-    }
-    public void setTel(String tel) {
-        this.tel = tel;
-    }
-    public String getUrl() {
-        return url;
-    }
-    public void setUrl(String url) {
-        this.url = url;
-    }
-    public String getAddress() {
-        return address;
-    }
-    public void setAddress(String address) {
-        this.address = address;
-    }
-    public String getCoordinates() {
-        return coordinates;
-    }
-    public void setCoordinates(String coordinates) {
-        this.coordinates = coordinates;
-    }
+    public TourDTO() {} // ✅ 반드시 필요
+
+    // ✅ 모든 setter가 있어야 함
+    public void setTitle(String title) { this.title = title; }
+    public void setIssuedDate(String issuedDate) { this.issuedDate = issuedDate; }
+    public void setCategory1(String category1) { this.category1 = category1; }
+    public void setCategory2(String category2) { this.category2 = category2; }
+    public void setCategory3(String category3) { this.category3 = category3; }
+    public void setDescription(String description) { this.description = description; }
+    public void setSubDescription(String subDescription) { this.subDescription = subDescription; }
+    public void setTel(String tel) { this.tel = tel; }
+    public void setUrl(String url) { this.url = url; }
+    public void setAddress(String address) { this.address = address; }
+    public void setCoordinates(String coordinates) { this.coordinates = coordinates; }
+
+    // getter 생략 가능하지만 있으면 더 좋음
 }
+

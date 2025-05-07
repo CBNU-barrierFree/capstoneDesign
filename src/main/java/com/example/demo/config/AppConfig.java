@@ -3,6 +3,7 @@ package com.example.demo.config;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.http.converter.xml.MappingJackson2XmlHttpMessageConverter;
 import org.springframework.web.client.RestTemplate;
 
 @Configuration
@@ -12,7 +13,7 @@ public class AppConfig {
     @Bean
     public RestTemplate restTemplate() {
         RestTemplate restTemplate = new RestTemplate();
-        // 필요시, JSON 혹은 XML 메시지 컨버터 설정 추가 가능
+        restTemplate.getMessageConverters().add(new MappingJackson2XmlHttpMessageConverter());
         return restTemplate;
     }
 }

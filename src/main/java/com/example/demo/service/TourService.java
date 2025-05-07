@@ -4,14 +4,19 @@ import com.example.demo.DTO.TourApiResponseDTO;
 import com.example.demo.DTO.TourDTO;
 import com.example.demo.entity.TourEntity;
 import com.example.demo.repository.TourRepository;
-import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
+import java.util.List;
+import java.util.Optional;
 
 @Service
 public class TourService {
     private final TourRepository tourRepository;
     private final RestTemplate restTemplate;
+
+    private String apiUrl = "http://api.kcisa.kr/openapi/API_TOU_049/request"
+            + "?serviceKey=c0957f50-2a47-448e-b35a-7c0aa5415680"
+            + "&numOfRows=1000";
 
     public TourService(TourRepository tourRepository, RestTemplate restTemplate) {
         this.tourRepository = tourRepository;
@@ -19,58 +24,75 @@ public class TourService {
     }
 
     public void fetchAndSaveAllTours() {
-        int pageNo = 1;
-        int numOfRows = 10;
-        int totalCount = Integer.MAX_VALUE; // 초기값은 매우 큰 값
+        int page = 1;
+        int totalSaved = 0;
 
-        while ((pageNo - 1) * numOfRows < totalCount) {
-            String url = "http://api.kcisa.kr/openapi/API_TOU_049/request"
-                    + "?serviceKey=c0957f50-2a47-448e-b35a-7c0aa5415680"  // 실제 서비스 키로 대체
-                    + "&numOfRows=" + numOfRows
-                    + "&pageNo=" + pageNo;
-            // 필요하다면 "&_type=json" 파라미터 추가 가능
-            // + "&_type=json";
+        while (true) {
+            String url = apiUrl + "&pageNo=" + page;
 
-            // JSON 응답을 요청하기 위해 Accept 헤더를 지정하는 방법은,
-            // RestTemplate에 인터셉터를 추가하거나 클라이언트별로 설정할 수 있으나,
-            // 기본적으로 스프링의 MappingJackson2HttpMessageConverter가 적용되므로,
-            // URL이나 환경에 따라 JSON 응답이 반환된다면 별도 설정 없이도 매핑됩니다.
+            // 요청 URL 출력
+            System.out.println("요청 URL: " + url);
 
-            TourApiResponseDTO tourResponse = restTemplate.getForObject(url, TourApiResponseDTO.class);
-            if (tourResponse == null || tourResponse.getBody() == null ||
-                    tourResponse.getBody().getItems() == null ||
-                    tourResponse.getBody().getItems().getItem() == null) {
-                break; // 응답이 올바르지 않으면 종료
-            }
+            TourApiResponseDTO response = null;
 
             try {
-                totalCount = Integer.parseInt(tourResponse.getBody().getTotalCount());
-            } catch (NumberFormatException e) {
+                response = restTemplate.getForObject(url, TourApiResponseDTO.class);
+                System.out.println("응답 성공 여부: " + (response != null));
+            } catch (Exception e) {
+                System.out.println("API 호출 중 예외 발생:");
+                e.printStackTrace();
                 break;
             }
 
-            for (TourDTO dto : tourResponse.getBody().getItems().getItem()) {
-                TourEntity entity = new TourEntity();
-                entity.setTitle(dto.getTitle());
-                entity.setIssuedDate(dto.getIssuedDate());
-                entity.setCategory1(dto.getCategory1());
-                entity.setCategory2(dto.getCategory2());
-                entity.setCategory3(dto.getCategory3());
-                entity.setDescription(dto.getDescription());
-                entity.setSubDescription(dto.getSubDescription());
-                entity.setTel(dto.getTel());
-                entity.setUrl(dto.getUrl());
-                entity.setAddress(dto.getAddress());
-                entity.setCoordinates(dto.getCoordinates());
-                tourRepository.save(entity);
+            // 응답 검증
+            if (response == null) {
+                System.out.println("응답이 null입니다.");
+                break;
             }
-            System.out.println("Page " + pageNo + " 저장 완료");
-            pageNo++;
+            if (response.getBody() == null) {
+                System.out.println("Body가 null입니다.");
+                break;
+            }
+            if (response.getBody().getItems() == null) {
+                System.out.println("Items가 null입니다.");
+                break;
+            }
+
+            List<TourDTO> tourDTOs = response.getBody().getItems().getItem();
+
+            // 데이터 수 출력
+            System.out.println("page: " + page);
+            System.out.println("현재 내려온 데이터 수: " + tourDTOs.size());
+
+            for (TourDTO dto : tourDTOs) {
+                Optional<TourEntity> existing = tourRepository.findByTitleAndAddress(dto.getTitle(), dto.getAddress());
+                if (existing.isEmpty()) {
+                    TourEntity entity = convertToEntity(dto);
+                    tourRepository.save(entity);
+                    totalSaved++;
+                }
+            }
+
+            if (tourDTOs.size() < 1000) break;
+            page++;
         }
+
+        System.out.println("총 저장된 관광지 수: " + totalSaved);
     }
 
-    @Scheduled(fixedDelay = 3600000)
-    public void scheduledFetchAndSaveTours() {
-        fetchAndSaveAllTours();
+    private TourEntity convertToEntity(TourDTO dto) {
+        TourEntity entity = new TourEntity();
+        entity.setTitle(dto.getTitle());
+        entity.setIssuedDate(dto.getIssuedDate());
+        entity.setCategory1(dto.getCategory1());
+        entity.setCategory2(dto.getCategory2());
+        entity.setCategory3(dto.getCategory3());
+        entity.setDescription(dto.getDescription());
+        entity.setSubDescription(dto.getSubDescription());
+        entity.setTel(dto.getTel());
+        entity.setUrl(dto.getUrl());
+        entity.setAddress(dto.getAddress());
+        entity.setCoordinates(dto.getCoordinates());
+        return entity;
     }
 }
