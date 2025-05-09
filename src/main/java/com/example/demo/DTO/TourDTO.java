@@ -21,9 +21,9 @@ public class TourDTO {
     private String address;
     private String coordinates;
 
-    public TourDTO() {} // ✅ 반드시 필요
+    public TourDTO() {} // 반드시 필요
 
-    // ✅ 모든 setter가 있어야 함
+    // 여기부터 setter
     public void setTitle(String title) { this.title = title; }
     public void setIssuedDate(String issuedDate) { this.issuedDate = issuedDate; }
     public void setCategory1(String category1) { this.category1 = category1; }
@@ -36,6 +36,6 @@ public class TourDTO {
     public void setAddress(String address) { this.address = address; }
     public void setCoordinates(String coordinates) { this.coordinates = coordinates; }
 
-    // getter 생략 가능하지만 있으면 더 좋음
+    // getter는 생략
 }
 
