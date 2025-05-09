@@ -1,63 +1,92 @@
 <!DOCTYPE html>
-<html lang="ko">
+<html lang="ko" xmlns:th="http://www.thymeleaf.org">
 <head>
     <meta charset="UTF-8">
     <title>관광지 배리어프리 정보</title>
     <style>
+        body {
+            margin: 0;
+            padding: 0;
+            font-family: sans-serif;
+        }
+
+        #auth-buttons {
+            position: absolute;
+            top: 16px;
+            right: 16px;
+        }
+
+        #auth-buttons button {
+            padding: 6px 12px;
+            margin-left: 8px;
+            font-size: 14px;
+            cursor: pointer;
+        }
+
         #places {
-          display: grid;
-          grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
-          gap: 16px;
-          margin-top: 16px;
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+            gap: 16px;
+            margin-top: 16px;
         }
+
         .place {
-          background: #fff;
-          padding: 16px;
-          border-radius: 8px;
-          box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-          cursor: pointer;
-          position: relative;
+            background: #fff;
+            padding: 16px;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            cursor: pointer;
+            position: relative;
         }
+
         .place:hover {
-          background: #f0f8ff;
+            background: #f0f8ff;
         }
+
         .favorite {
-          position: absolute;
-          top: 12px;
-          right: 12px;
-          font-size: 20px;
-          cursor: pointer;
+            position: absolute;
+            top: 12px;
+            right: 12px;
+            font-size: 20px;
+            cursor: pointer;
         }
+
         .favorite.active {
-          color: gold;
+            color: gold;
         }
+
         #map {
-          width: 100%;
-          height: 400px;
-          margin: 20px 0;
+            width: 100%;
+            height: 400px;
+            margin: 20px 0;
         }
+
         .filters {
-          display: flex;
-          flex-wrap: wrap;
-          gap: 16px;
-          margin-top: 10px;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 16px;
+            margin-top: 10px;
         }
+
         .filters label {
-          white-space: nowrap;
+            white-space: nowrap;
         }
+
         .pagination {
-          margin-top: 20px;
-          text-align: center;
-          grid-column: 1 / -1;
+            margin-top: 20px;
+            text-align: center;
+            grid-column: 1 / -1;
         }
+
         .pagination button {
-          margin: 4px;
-          padding: 6px 12px;
-          cursor: pointer;
+            margin: 4px;
+            padding: 6px 12px;
+            cursor: pointer;
         }
+
         .pagination button:disabled {
-          font-weight: bold;
-          background: #eee;
+            font-weight: bold;
+            background: #eee;
         }
     </style>
     <script src="https://dapi.kakao.com/v2/maps/sdk.js?appkey=ec7a521b62d776eb9f9d4089423e63da&libraries=clusterer"></script>
@@ -91,139 +120,137 @@
     const favorites = JSON.parse(localStorage.getItem('favorites') || '[]');
 
     function toggleFavorite(title) {
-      const index = favorites.indexOf(title);
-      if (index > -1) favorites.splice(index, 1);
-      else favorites.push(title);
-      localStorage.setItem('favorites', JSON.stringify(favorites));
-      filterPlaces();
+        const index = favorites.indexOf(title);
+        if (index > -1) favorites.splice(index, 1);
+        else favorites.push(title);
+        localStorage.setItem('favorites', JSON.stringify(favorites));
+        filterPlaces();
     }
 
     function initMap() {
-      const container = document.getElementById('map');
-      const options = {
-        center: new kakao.maps.LatLng(37.5665, 126.9780),
-        level: 7
-      };
-      map = new kakao.maps.Map(container, options);
-      clusterer = new kakao.maps.MarkerClusterer({ map, averageCenter: true, minLevel: 5 });
-
-      kakao.maps.event.addListener(map, 'idle', filterPlaces); // ✅ 지도 이동 후 필터링 적용
+        const container = document.getElementById('map');
+        const options = {
+            center: new kakao.maps.LatLng(37.5665, 126.9780),
+            level: 7
+        };
+        map = new kakao.maps.Map(container, options);
+        clusterer = new kakao.maps.MarkerClusterer({ map, averageCenter: true, minLevel: 5 });
+        kakao.maps.event.addListener(map, 'idle', filterPlaces);
     }
 
     function addAllMarkers(places) {
-      clusterer.clear();
-      const markerList = [];
-      places.forEach(place => {
-        const match = place.coordinates?.match(/N([\d.]+), E([\d.]+)/);
-        if (match) {
-          const lat = parseFloat(match[1]);
-          const lng = parseFloat(match[2]);
-          const latlng = new kakao.maps.LatLng(lat, lng);
-          const marker = new kakao.maps.Marker({ position: latlng, title: place.title });
-          const infowindow = new kakao.maps.InfoWindow({ content: `<div style='padding:8px;font-size:14px;'><strong>${place.title}</strong></div>` });
-          kakao.maps.event.addListener(marker, 'mouseover', () => infowindow.open(map, marker));
-          kakao.maps.event.addListener(marker, 'mouseout', () => infowindow.close());
-          markerList.push(marker);
-        }
-      });
-      clusterer.addMarkers(markerList);
+        clusterer.clear();
+        const markerList = [];
+        places.forEach(place => {
+            const match = place.coordinates?.match(/N([\d.]+), E([\d.]+)/);
+            if (match) {
+                const lat = parseFloat(match[1]);
+                const lng = parseFloat(match[2]);
+                const latlng = new kakao.maps.LatLng(lat, lng);
+                const marker = new kakao.maps.Marker({ position: latlng, title: place.title });
+                const infowindow = new kakao.maps.InfoWindow({ content: `<div style='padding:8px;font-size:14px;'><strong>${place.title}</strong></div>` });
+                kakao.maps.event.addListener(marker, 'mouseover', () => infowindow.open(map, marker));
+                kakao.maps.event.addListener(marker, 'mouseout', () => infowindow.close());
+                markerList.push(marker);
+            }
+        });
+        clusterer.addMarkers(markerList);
     }
 
     function renderPagination(totalItems) {
-      const totalPages = Math.ceil(totalItems / itemsPerPage);
-      const pagination = document.createElement('div');
-      pagination.className = 'pagination';
-      for (let i = 1; i <= totalPages; i++) {
-        const btn = document.createElement('button');
-        btn.textContent = i;
-        if (i === currentPage) btn.disabled = true;
-        btn.addEventListener('click', () => {
-          currentPage = i;
-          renderPlaces(filteredPlaces);
-        });
-        pagination.appendChild(btn);
-      }
-      document.getElementById('places').appendChild(pagination);
+        const totalPages = Math.ceil(totalItems / itemsPerPage);
+        const pagination = document.createElement('div');
+        pagination.className = 'pagination';
+        for (let i = 1; i <= totalPages; i++) {
+            const btn = document.createElement('button');
+            btn.textContent = i;
+            if (i === currentPage) btn.disabled = true;
+            btn.addEventListener('click', () => {
+                currentPage = i;
+                renderPlaces(filteredPlaces);
+            });
+            pagination.appendChild(btn);
+        }
+        document.getElementById('places').appendChild(pagination);
     }
 
     function renderPlaces(places) {
-      const container = document.getElementById('places');
-      container.innerHTML = '';
-      const start = (currentPage - 1) * itemsPerPage;
-      const pageItems = places.slice(start, start + itemsPerPage);
+        const container = document.getElementById('places');
+        container.innerHTML = '';
+        const start = (currentPage - 1) * itemsPerPage;
+        const pageItems = places.slice(start, start + itemsPerPage);
 
-      pageItems.forEach(place => {
-        const div = document.createElement('div');
-        div.className = 'place';
-        const isFav = favorites.includes(place.title);
+        pageItems.forEach(place => {
+            const div = document.createElement('div');
+            div.className = 'place';
+            const isFav = favorites.includes(place.title);
 
-        div.innerHTML = `
-          <div class="favorite ${isFav ? 'active' : ''}" onclick="toggleFavorite('${place.title}')">
-            ${isFav ? '★' : '☆'}
-          </div>
-          <h2>${place.title}</h2>
-          <p><strong>📍 주소:</strong> ${place.address}</p>
-          <p><strong>🕒 운영시간:</strong> ${place.description}</p>
-          <p><strong>📅 등록일:</strong> ${place.issuedDate}</p>
-          <p><strong>📞 연락처:</strong> ${place.tel || '정보 없음'}</p>
-          <p><strong>🌐 홈페이지:</strong> ${place.url ? `<a href='http://${place.url}' target='_blank'>${place.url}</a>` : '정보 없음'}</p>
-          <p><strong>📁 카테고리:</strong> ${place.category1} / ${place.category2}</p>
-          <p><strong>♿ 배리어프리 정보:</strong> ${place.subDescription}</p>
-          <p><strong>📌 좌표:</strong> ${place.coordinates}</p>
-        `;
-        container.appendChild(div);
-      });
+            div.innerHTML = `
+                <div class="favorite ${isFav ? 'active' : ''}" onclick="toggleFavorite('${place.title}')">
+                    ${isFav ? '★' : '☆'}
+                </div>
+                <h2>${place.title}</h2>
+                <p><strong>📍 주소:</strong> ${place.address}</p>
+                <p><strong>🕒 운영시간:</strong> ${place.description}</p>
+                <p><strong>📅 등록일:</strong> ${place.issuedDate}</p>
+                <p><strong>📞 연락처:</strong> ${place.tel || '정보 없음'}</p>
+                <p><strong>🌐 홈페이지:</strong> ${place.url ? `<a href='http://${place.url}' target='_blank'>${place.url}</a>` : '정보 없음'}</p>
+                <p><strong>📁 카테고리:</strong> ${place.category1} / ${place.category2}</p>
+                <p><strong>♿ 배리어프리 정보:</strong> ${place.subDescription}</p>
+                <p><strong>📌 좌표:</strong> ${place.coordinates}</p>
+            `;
+            container.appendChild(div);
+        });
 
-      renderPagination(places.length);
-      addAllMarkers(places);
+        renderPagination(places.length);
+        addAllMarkers(places);
     }
 
     function filterPlaces() {
-      const keyword = document.getElementById('searchInput').value.toLowerCase().trim();
-      const checkedFilters = Array.from(document.querySelectorAll('.barrier-filter:checked')).map(cb => cb.value);
-      const favoriteOnly = document.getElementById('favoriteOnly').checked;
+        const keyword = document.getElementById('searchInput').value.toLowerCase().trim();
+        const checkedFilters = Array.from(document.querySelectorAll('.barrier-filter:checked')).map(cb => cb.value);
+        const favoriteOnly = document.getElementById('favoriteOnly').checked;
+        const bounds = map.getBounds();
 
-      const bounds = map.getBounds();
+        filteredPlaces = allPlaces.filter(place => {
+            const titleMatch = place.title.toLowerCase().includes(keyword);
+            const addressMatch = place.address.toLowerCase().includes(keyword);
+            const sub = place.subDescription || '';
+            const filtersPass = checkedFilters.every(term => sub.includes(term));
+            const favoritePass = !favoriteOnly || favorites.includes(place.title);
 
-      filteredPlaces = allPlaces.filter(place => {
-        const titleMatch = place.title.toLowerCase().includes(keyword);
-        const addressMatch = place.address.toLowerCase().includes(keyword);
-        const sub = place.subDescription || '';
-        const filtersPass = checkedFilters.every(term => sub.includes(term));
-        const favoritePass = !favoriteOnly || favorites.includes(place.title);
+            const match = place.coordinates?.match(/N([\d.]+), E([\d.]+)/);
+            let inMapBounds = true;
+            if (match) {
+                const latlng = new kakao.maps.LatLng(parseFloat(match[1]), parseFloat(match[2]));
+                inMapBounds = bounds.contain(latlng);
+            }
 
-        const match = place.coordinates?.match(/N([\d.]+), E([\d.]+)/);
-        let inMapBounds = true;
-        if (match) {
-          const latlng = new kakao.maps.LatLng(parseFloat(match[1]), parseFloat(match[2]));
-          inMapBounds = bounds.contain(latlng);
-        }
+            return (titleMatch || addressMatch) && filtersPass && favoritePass && inMapBounds;
+        });
 
-        return (titleMatch || addressMatch) && filtersPass && favoritePass && inMapBounds;
-      });
-
-      currentPage = 1;
-      renderPlaces(filteredPlaces);
+        currentPage = 1;
+        renderPlaces(filteredPlaces);
     }
 
     document.addEventListener('DOMContentLoaded', () => {
-      document.getElementById('searchInput').addEventListener('input', filterPlaces);
-      document.querySelectorAll('.barrier-filter').forEach(cb => cb.addEventListener('change', filterPlaces));
-      document.getElementById('favoriteOnly').addEventListener('change', filterPlaces);
+        document.getElementById('searchInput').addEventListener('input', filterPlaces);
+        document.querySelectorAll('.barrier-filter').forEach(cb => cb.addEventListener('change', filterPlaces));
+        document.getElementById('favoriteOnly').addEventListener('change', filterPlaces);
     });
 
     initMap();
     fetch('/api/tour')
-      .then(res => res.json())
-      .then(data => {
-        allPlaces = data?.response?.body?.items?.item || [];
-        filteredPlaces = allPlaces;
-        renderPlaces(filteredPlaces);
-      })
-      .catch(error => {
-        console.error('API 호출 실패:', error);
-        document.getElementById('places').innerHTML = '데이터를 불러오는 중 오류가 발생했습니다.';
-      });
+        .then(res => res.json())
+        .then(data => {
+            allPlaces = data?.response?.body?.items?.item || [];
+            filteredPlaces = allPlaces;
+            renderPlaces(filteredPlaces);
+        })
+        .catch(error => {
+            console.error('API 호출 실패:', error);
+            document.getElementById('places').innerHTML = '데이터를 불러오는 중 오류가 발생했습니다.';
+        });
 </script>
 
 </body>

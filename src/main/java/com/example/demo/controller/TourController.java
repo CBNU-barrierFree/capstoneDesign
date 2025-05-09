@@ -3,12 +3,10 @@ package com.example.demo.controller;
 import com.example.demo.DTO.TourDTO;
 import com.example.demo.entity.TourEntity;
 import com.example.demo.repository.TourRepository;
-import com.example.demo.service.TourService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
-
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
@@ -43,7 +41,6 @@ public class TourController {
             return dto;
         }).collect(Collectors.toList());
 
-        // 프론트에서 기대하는 JSON 구조로 포장
         Map<String, Object> response = new HashMap<>();
         Map<String, Object> body = new HashMap<>();
         Map<String, Object> wrapper = new HashMap<>();

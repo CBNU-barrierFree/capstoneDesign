@@ -9,7 +9,6 @@ import org.springframework.web.client.RestTemplate;
 @Configuration
 @EnableConfigurationProperties(MyCustomConfig.class)
 public class AppConfig {
-
     @Bean
     public RestTemplate restTemplate() {
         RestTemplate restTemplate = new RestTemplate();

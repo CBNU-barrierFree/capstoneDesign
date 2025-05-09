@@ -36,7 +36,7 @@ public class SecurityConfig {
                 .formLogin((form) -> form
                         .loginPage("/users/login")
                         .loginProcessingUrl("/users/login")
-                        .usernameParameter("userId")  // 여기를 설정
+                        .usernameParameter("username")  // 여기를 설정
                         .passwordParameter("password")
                         .successHandler((request, response, authentication) -> {
                             response.setStatus(HttpServletResponse.SC_OK); // 로그인 성공 시 200 반환
