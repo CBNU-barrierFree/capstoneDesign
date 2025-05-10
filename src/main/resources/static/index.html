@@ -197,7 +197,6 @@
           <p><strong>📁 카테고리:</strong> ${place.category1} / ${place.category2}</p>
           <p><strong>♿ 배리어프리 정보:</strong> ${place.subDescription}</p>
           <p><strong>📌 좌표:</strong> ${place.coordinates}</p>
-          ${lat && lng && myLat && myLng ? `<a href="https://map.kakao.com/link/to/${place.title},${lat},${lng}" target="_blank">🧭 길찾기</a>` : ''}
         `;
             container.appendChild(div);
         });

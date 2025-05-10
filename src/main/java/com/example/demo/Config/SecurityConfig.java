@@ -78,9 +78,9 @@ public class SecurityConfig {
                 // 로그아웃 설정
                 .logout((logout) -> logout
                         .logoutUrl("/users/logout") // 로그아웃 처리 URL
-                        .logoutSuccessUrl("/users/login?logout") // 로그아웃 성공 후 이동할 URL
+                        .logoutSuccessUrl("/") // 로그아웃 성공 후 이동할 URL
                         .invalidateHttpSession(true) // 세션 무효화
-                        .deleteCookies("JSESSIONID") // 쿠키 삭제
+                        .deleteCookies("JSESSIONID", "nickname") // 쿠키 삭제
                         .permitAll() // 로그아웃 관련 경로 접근 허용
                 )
 
