@@ -1,27 +1,28 @@
 <!DOCTYPE html>
+
 <html lang="ko" xmlns:th="http://www.thymeleaf.org">
 <head>
     <meta charset="UTF-8">
     <title>관광지 배리어프리 정보</title>
     <style>
-        body {
-            margin: 0;
-            padding: 0;
-            font-family: sans-serif;
+        header {
+            background: #004080;
+            color: white;
+            padding: 12px 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .nav-buttons a {
+            color: white;
+            text-decoration: none;
+            margin-left: 16px;
+            font-weight: bold;
+        }
+        .nav-buttons a:hover {
+            text-decoration: underline;
         }
 
-        #auth-buttons {
-            position: absolute;
-            top: 16px;
-            right: 16px;
-        }
-
-        #auth-buttons button {
-            padding: 6px 12px;
-            margin-left: 8px;
-            font-size: 14px;
-            cursor: pointer;
-        }
 
         #places {
             display: grid;
@@ -29,7 +30,6 @@
             gap: 16px;
             margin-top: 16px;
         }
-
         .place {
             background: #fff;
             padding: 16px;
@@ -38,11 +38,9 @@
             cursor: pointer;
             position: relative;
         }
-
         .place:hover {
             background: #f0f8ff;
         }
-
         .favorite {
             position: absolute;
             top: 12px;
@@ -50,53 +48,54 @@
             font-size: 20px;
             cursor: pointer;
         }
-
         .favorite.active {
             color: gold;
         }
-
-        #map {
-            width: 100%;
-            height: 400px;
-            margin: 20px 0;
-        }
-
         .filters {
             display: flex;
             flex-wrap: wrap;
             gap: 16px;
             margin-top: 10px;
         }
-
         .filters label {
             white-space: nowrap;
         }
-
         .pagination {
             margin-top: 20px;
             text-align: center;
             grid-column: 1 / -1;
         }
-
         .pagination button {
             margin: 4px;
             padding: 6px 12px;
             cursor: pointer;
         }
-
         .pagination button:disabled {
             font-weight: bold;
             background: #eee;
         }
+        #map {
+            width: 100%;
+            height: 400px;
+            margin: 20px 0;
+        }
     </style>
     <script src="https://dapi.kakao.com/v2/maps/sdk.js?appkey=ec7a521b62d776eb9f9d4089423e63da&libraries=clusterer"></script>
+
+
 </head>
 <body>
 
-<h1>🎨 관광지 배리어프리 정보</h1>
+<header>
+    <h1>🎨 관광지 배리어프리 정보</h1>
+    <div class="nav-buttons" id="auth-section">
+        <a href="/users/login">🔐 로그인</a>
+        <a href="/users/signup">📝 회원가입</a>
+    </div>
+</header>
 
 <input type="text" id="searchInput" placeholder="관광지명 또는 주소 검색"
-       style="width: 300px; padding: 8px; font-size: 16px;">
+       style="width: 300px; padding: 8px; font-size: 16px;"> <button id="sortByDistance">📍 내 위치 기준 정렬</button>
 
 <div class="filters">
     <label><input type="checkbox" class="barrier-filter" value="휠체어 대여 가능"> 휠체어 대여 가능</label>
@@ -116,7 +115,8 @@
     let filteredPlaces = [];
     let currentPage = 1;
     const itemsPerPage = 10;
-    let map, clusterer;
+    let map, clusterer, myMarker = null;
+    let myLat = null, myLng = null;
     const favorites = JSON.parse(localStorage.getItem('favorites') || '[]');
 
     function toggleFavorite(title) {
@@ -129,10 +129,7 @@
 
     function initMap() {
         const container = document.getElementById('map');
-        const options = {
-            center: new kakao.maps.LatLng(37.5665, 126.9780),
-            level: 7
-        };
+        const options = { center: new kakao.maps.LatLng(37.5665, 126.9780), level: 7 };
         map = new kakao.maps.Map(container, options);
         clusterer = new kakao.maps.MarkerClusterer({ map, averageCenter: true, minLevel: 5 });
         kakao.maps.event.addListener(map, 'idle', filterPlaces);
@@ -179,26 +176,29 @@
         container.innerHTML = '';
         const start = (currentPage - 1) * itemsPerPage;
         const pageItems = places.slice(start, start + itemsPerPage);
-
         pageItems.forEach(place => {
             const div = document.createElement('div');
             div.className = 'place';
             const isFav = favorites.includes(place.title);
+            const match = place.coordinates?.match(/N([\d.]+), E([\d.]+)/);
+            const lat = match ? parseFloat(match[1]) : null;
+            const lng = match ? parseFloat(match[2]) : null;
 
             div.innerHTML = `
-                <div class="favorite ${isFav ? 'active' : ''}" onclick="toggleFavorite('${place.title}')">
-                    ${isFav ? '★' : '☆'}
-                </div>
-                <h2>${place.title}</h2>
-                <p><strong>📍 주소:</strong> ${place.address}</p>
-                <p><strong>🕒 운영시간:</strong> ${place.description}</p>
-                <p><strong>📅 등록일:</strong> ${place.issuedDate}</p>
-                <p><strong>📞 연락처:</strong> ${place.tel || '정보 없음'}</p>
-                <p><strong>🌐 홈페이지:</strong> ${place.url ? `<a href='http://${place.url}' target='_blank'>${place.url}</a>` : '정보 없음'}</p>
-                <p><strong>📁 카테고리:</strong> ${place.category1} / ${place.category2}</p>
-                <p><strong>♿ 배리어프리 정보:</strong> ${place.subDescription}</p>
-                <p><strong>📌 좌표:</strong> ${place.coordinates}</p>
-            `;
+          <div class="favorite ${isFav ? 'active' : ''}" onclick="toggleFavorite('${place.title}')">
+            ${isFav ? '★' : '☆'}
+          </div>
+          <h2>${place.title}</h2>
+          <p><strong>📍 주소:</strong> ${place.address}</p>
+          <p><strong>🕒 운영시간:</strong> ${place.description}</p>
+          <p><strong>📅 등록일:</strong> ${place.issuedDate}</p>
+          <p><strong>📞 연락처:</strong> ${place.tel || '정보 없음'}</p>
+          <p><strong>🌐 홈페이지:</strong> ${place.url ? `<a href='http://${place.url}' target='_blank'>${place.url}</a>` : '정보 없음'}</p>
+          <p><strong>📁 카테고리:</strong> ${place.category1} / ${place.category2}</p>
+          <p><strong>♿ 배리어프리 정보:</strong> ${place.subDescription}</p>
+          <p><strong>📌 좌표:</strong> ${place.coordinates}</p>
+          ${lat && lng && myLat && myLng ? `<a href="https://map.kakao.com/link/to/${place.title},${lat},${lng}" target="_blank">🧭 길찾기</a>` : ''}
+        `;
             container.appendChild(div);
         });
 
@@ -209,7 +209,7 @@
     function filterPlaces() {
         const keyword = document.getElementById('searchInput').value.toLowerCase().trim();
         const checkedFilters = Array.from(document.querySelectorAll('.barrier-filter:checked')).map(cb => cb.value);
-        const favoriteOnly = document.getElementById('favoriteOnly').checked;
+        const favoriteOnly = document.getElementById('favoriteOnly')?.checked || false;
         const bounds = map.getBounds();
 
         filteredPlaces = allPlaces.filter(place => {
@@ -233,10 +233,70 @@
         renderPlaces(filteredPlaces);
     }
 
+    function getDistance(lat1, lon1, lat2, lon2) {
+        const toRad = x => x * Math.PI / 180;
+        const R = 6371;
+        const dLat = toRad(lat2 - lat1);
+        const dLon = toRad(lon2 - lon1);
+        const a = Math.sin(dLat / 2) ** 2 + Math.cos(toRad(lat1)) * Math.cos(toRad(lat2)) * Math.sin(dLon / 2) ** 2;
+        const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+        return R * c;
+    }
+
+    // ✅ 내 위치 가져와서 정렬
+    function sortByMyLocation() {
+        if (!navigator.geolocation) {
+            alert('위치 정보를 지원하지 않는 브라우저입니다.');
+            return;
+        }
+        navigator.geolocation.getCurrentPosition(position => {
+            myLat = position.coords.latitude;
+            myLng = position.coords.longitude;
+
+            const currentLocation = new kakao.maps.LatLng(myLat, myLng);
+            map.setCenter(currentLocation);
+
+            if (myMarker) myMarker.setMap(null);
+            myMarker = new kakao.maps.Marker({
+                position: currentLocation,
+                map: map,
+                title: '현재 내 위치',
+                image: new kakao.maps.MarkerImage('https://t1.daumcdn.net/localimg/localimages/07/mapapidoc/marker_red.png', new kakao.maps.Size(40, 42))
+            });
+
+            filteredPlaces.sort((a, b) => {
+                const aMatch = a.coordinates?.match(/N([\d.]+), E([\d.]+)/);
+                const bMatch = b.coordinates?.match(/N([\d.]+), E([\d.]+)/);
+                if (!aMatch || !bMatch) return 0;
+                const aDist = getDistance(myLat, myLng, parseFloat(aMatch[1]), parseFloat(aMatch[2]));
+                const bDist = getDistance(myLat, myLng, parseFloat(bMatch[1]), parseFloat(bMatch[2]));
+                return aDist - bDist;
+            });
+
+            currentPage = 1;
+            renderPlaces(filteredPlaces);
+        }, () => {
+            alert('위치 정보를 가져올 수 없습니다.');
+        });
+    }
+
+    document.getElementById('sortByDistance')?.addEventListener('click', sortByMyLocation);
     document.addEventListener('DOMContentLoaded', () => {
         document.getElementById('searchInput').addEventListener('input', filterPlaces);
         document.querySelectorAll('.barrier-filter').forEach(cb => cb.addEventListener('change', filterPlaces));
-        document.getElementById('favoriteOnly').addEventListener('change', filterPlaces);
+        document.getElementById('favoriteOnly')?.addEventListener('change', filterPlaces);
+
+        const cookies = document.cookie.split(';').map(c => c.trim());
+        const nicknameCookie = cookies.find(c => c.startsWith('nickname='));
+        const authSection = document.getElementById('auth-section');
+
+        if (nicknameCookie && authSection) {
+            const nickname = decodeURIComponent(nicknameCookie.split('=')[1]);
+            authSection.innerHTML = `
+      <span><strong>${nickname}</strong> 님</span>
+      <a href="/users/logout">🚪 로그아웃</a>
+    `;
+        }
     });
 
     initMap();

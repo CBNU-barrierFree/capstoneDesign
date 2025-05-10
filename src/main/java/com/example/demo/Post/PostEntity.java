@@ -14,7 +14,9 @@ public class PostEntity {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
+    @Column(nullable = false)
     private String title;
+    @Column(nullable = false, columnDefinition = "TEXT")
     private String content;
     private String author;
     private LocalDateTime createdAt;

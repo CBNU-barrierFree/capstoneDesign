@@ -16,6 +16,7 @@ public class PostService {
         return postRepository.findAll();
     }
 
+    // 게시물을 올리면 DB에 저장
     public void savePost(PostEntity post) {
         post.setCreatedAt(LocalDateTime.now());
         postRepository.save(post);

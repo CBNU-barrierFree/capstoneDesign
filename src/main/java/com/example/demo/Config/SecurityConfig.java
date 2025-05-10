@@ -10,6 +10,8 @@ import org.springframework.security.config.annotation.web.configurers.AbstractHt
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
+import jakarta.servlet.http.Cookie;
+
 
 @Configuration // 이 클래스가 Spring 설정 클래스임을 나타냄
 @EnableWebSecurity // Spring Security 웹 보안을 활성화
@@ -50,12 +52,25 @@ public class SecurityConfig {
                         .usernameParameter("username") // 로그인 폼의 사용자명 파라미터 이름
                         .passwordParameter("password") // 로그인 폼의 비밀번호 파라미터 이름
                         .successHandler((request, response, authentication) -> {
-                            response.setStatus(HttpServletResponse.SC_OK); // 로그인 성공 시 HTTP 200 응답
+                            Object principal = authentication.getPrincipal();
+                            String nickname = "";
+
+                            if (principal instanceof com.example.demo.User.CustomUserDetails customUser) {
+                                nickname = customUser.getNickname();
+                            }
+
+                            Cookie nicknameCookie = new Cookie("nickname", nickname);
+                            nicknameCookie.setPath("/");
+                            nicknameCookie.setHttpOnly(false); // JavaScript에서 접근 가능하게
+                            response.addCookie(nicknameCookie);
+
+                            response.sendRedirect("/"); // 로그인 후 홈페이지로 이동
                         })
+
                         .failureHandler((request, response, exception) -> {
                             response.setStatus(HttpServletResponse.SC_UNAUTHORIZED); // 로그인 실패 시 HTTP 401 응답
                         })
-                        .defaultSuccessUrl("/", true) // 로그인 성공 후 이동할 기본 URL
+                        // 로그인 성공 후 이동할 기본 URL
                         .failureUrl("/users/login?error=true") // 로그인 실패 시 이동할 URL
                         .permitAll() // 로그인 관련 경로 접근 허용
                 )

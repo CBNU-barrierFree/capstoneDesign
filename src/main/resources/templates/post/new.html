@@ -7,8 +7,12 @@
 <body>
 <h1>새 글 작성</h1>
 <form action="/posts" method="post">
-    <label>제목: <input type="text" name="title" /></label><br><br>
-    <label>내용: <textarea name="content" rows="5" cols="30"></textarea></label><br><br>
+    <form action="/posts" method="post">
+        <label>제목: <input type="text" name="title" required /></label><br><br>
+        <label>내용: <textarea name="content" rows="5" cols="30" required></textarea></label><br><br>
+        <button type="submit">저장</button>
+    </form>
+
     <label>작성자: <input type="text" name="author" /></label><br><br>
     <button type="submit">저장</button>
 </form>
