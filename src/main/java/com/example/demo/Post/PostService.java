@@ -1,4 +1,4 @@
-package com.example.demo.post;
+package com.example.demo.Post;
 
 import org.springframework.stereotype.Service;
 import java.time.LocalDateTime;

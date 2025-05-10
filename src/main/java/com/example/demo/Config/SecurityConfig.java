@@ -1,4 +1,4 @@
-package com.example.demo.config;
+package com.example.demo.Config;
 
 import com.example.demo.User.CustomUserDetailsService;
 import jakarta.servlet.http.HttpServletResponse;

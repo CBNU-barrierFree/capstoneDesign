@@ -1,4 +1,4 @@
-package com.example.demo.post;
+package com.example.demo.Post;
 
 import jakarta.persistence.*;
 import lombok.Getter;
