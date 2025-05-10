@@ -16,13 +16,5 @@ public class Items {
     @JacksonXmlElementWrapper(useWrapping = false)
     @JacksonXmlProperty(localName = "item")
     private List<TourDTO> item;
-
-    public List<TourDTO> getItem() {
-        return item;
-    }
-
-    public void setItem(List<TourDTO> item) {
-        this.item = item;
-    }
 }
 

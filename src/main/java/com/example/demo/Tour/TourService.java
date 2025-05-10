@@ -1,9 +1,7 @@
-package com.example.demo.service;
+package com.example.demo.Tour;
 
 import com.example.demo.DTO.TourApiResponseDTO;
 import com.example.demo.DTO.TourDTO;
-import com.example.demo.entity.TourEntity;
-import com.example.demo.repository.TourRepository;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
 import java.util.List;

@@ -22,20 +22,4 @@ public class TourDTO {
     private String coordinates;
 
     public TourDTO() {} // 반드시 필요
-
-    // 여기부터 setter
-    public void setTitle(String title) { this.title = title; }
-    public void setIssuedDate(String issuedDate) { this.issuedDate = issuedDate; }
-    public void setCategory1(String category1) { this.category1 = category1; }
-    public void setCategory2(String category2) { this.category2 = category2; }
-    public void setCategory3(String category3) { this.category3 = category3; }
-    public void setDescription(String description) { this.description = description; }
-    public void setSubDescription(String subDescription) { this.subDescription = subDescription; }
-    public void setTel(String tel) { this.tel = tel; }
-    public void setUrl(String url) { this.url = url; }
-    public void setAddress(String address) { this.address = address; }
-    public void setCoordinates(String coordinates) { this.coordinates = coordinates; }
-
-    // getter는 생략
 }
-

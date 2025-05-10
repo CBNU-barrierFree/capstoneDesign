@@ -1,6 +1,5 @@
-package com.example.demo.config;
+package com.example.demo.User;
 
-import com.example.demo.entity.UserEntity;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
 import java.util.Collection;

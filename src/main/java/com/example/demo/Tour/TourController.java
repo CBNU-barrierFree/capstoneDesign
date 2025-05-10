@@ -1,8 +1,6 @@
-package com.example.demo.controller;
+package com.example.demo.Tour;
 
 import com.example.demo.DTO.TourDTO;
-import com.example.demo.entity.TourEntity;
-import com.example.demo.repository.TourRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;

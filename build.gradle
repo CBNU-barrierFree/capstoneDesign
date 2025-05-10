@@ -22,7 +22,8 @@ dependencies {
 	implementation 'org.springframework.boot:spring-boot-starter-web'
 	implementation 'org.springframework.boot:spring-boot-starter-webflux' // WebClient 사용 시
 	implementation 'com.fasterxml.jackson.dataformat:jackson-dataformat-xml'
-	compileOnly 'org.projectlombok:lombok' // 코드 간결화용
+	implementation 'org.springframework.boot:spring-boot-starter-web-services'
+	compileOnly 'org.projectlombok:lombok' // 코드 간결화용, getter, setter
 	annotationProcessor 'org.projectlombok:lombok'
 	implementation 'org.springframework.boot:spring-boot-starter-security'
 	implementation 'javax.persistence:javax.persistence-api:2.2'

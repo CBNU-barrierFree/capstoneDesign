@@ -1,12 +1,8 @@
-package com.example.demo.service;
+package com.example.demo.User;
 
-import com.example.demo.config.CustomUserDetails;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
-import org.springframework.security.core.userdetails.User;
-import com.example.demo.entity.UserEntity;
-import com.example.demo.repository.UserRepository;
 import org.springframework.stereotype.Service;
 
 @Service // 이 클래스가 서비스 계층의 컴포넌트임을 나타내며, Spring이 자동으로 빈으로 등록

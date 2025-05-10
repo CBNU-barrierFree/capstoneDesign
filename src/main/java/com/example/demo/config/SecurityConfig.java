@@ -1,6 +1,6 @@
 package com.example.demo.config;
 
-import com.example.demo.service.CustomUserDetailsService;
+import com.example.demo.User.CustomUserDetailsService;
 import jakarta.servlet.http.HttpServletResponse;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -37,6 +37,8 @@ public class SecurityConfig {
                         .requestMatchers("/users/signup", "/users/login", "/users/signup_complete").permitAll()
                         // 관광지 관련 API 및 모든 URL에 대해 접근 허용 (최종 프로젝트 단계에서 필요에 따라 제한 예정)
                         .requestMatchers("/touristSpot/**", "/api/**", "/api/tourist-accessible-info", "/touristSpot/Json/**", "/**").permitAll()
+                        // 게시판은 로그인 한 사람만 접근 허용
+                        .requestMatchers("/posts/**").authenticated()
                         // 위에서 허용하지 않은 그 외 모든 요청은 인증 필요
                         .anyRequest().authenticated()
                 )
