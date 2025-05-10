@@ -1,0 +1,17 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <title>글 작성</title>
+</head>
+<body>
+<h1>새 글 작성</h1>
+<form action="/posts" method="post">
+    <label>제목: <input type="text" name="title" /></label><br><br>
+    <label>내용: <textarea name="content" rows="5" cols="30"></textarea></label><br><br>
+    <label>작성자: <input type="text" name="author" /></label><br><br>
+    <button type="submit">저장</button>
+</form>
+<a href="/posts">목록으로</a>
+</body>
+</html>
