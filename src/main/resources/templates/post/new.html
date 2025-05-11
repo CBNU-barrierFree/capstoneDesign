@@ -1,21 +1,15 @@
 <!DOCTYPE html>
-<html lang="ko">
+<html lang="ko" xmlns:th="http://www.thymeleaf.org">
 <head>
     <meta charset="UTF-8">
     <title>글 작성</title>
 </head>
 <body>
-<h1>새 글 작성</h1>
-<form action="/posts" method="post">
-    <form action="/posts" method="post">
-        <label>제목: <input type="text" name="title" required /></label><br><br>
-        <label>내용: <textarea name="content" rows="5" cols="30" required></textarea></label><br><br>
-        <button type="submit">저장</button>
-    </form>
-
-    <label>작성자: <input type="text" name="author" /></label><br><br>
-    <button type="submit">저장</button>
+<h1>글 작성</h1>
+<form th:action="@{/posts}" method="post" th:object="${post}">
+    <label>제목: <input type="text" th:field="*{title}"/></label><br/>
+    <label>내용: <textarea th:field="*{content}"></textarea></label><br/>
+    <button type="submit">작성</button>
 </form>
-<a href="/posts">목록으로</a>
 </body>
 </html>

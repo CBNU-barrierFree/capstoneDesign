@@ -4,6 +4,7 @@ import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.List;
 
 // UserEntity 기반으로 Spring Security의 UserDetails를 구현한 클래스
 public class CustomUserDetails implements UserDetails {
@@ -18,6 +19,8 @@ public class CustomUserDetails implements UserDetails {
     public String getNickname() {
         return user.getNickname();
     }
+
+    public UserEntity getUser() { return user; }
 
     // 사용자 이름 반환
     public String getName() {

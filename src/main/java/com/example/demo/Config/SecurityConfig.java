@@ -33,16 +33,11 @@ public class SecurityConfig {
 
                 // URL 경로에 따른 접근 권한 설정
                 .authorizeHttpRequests((requests) -> requests
-                        // 정적 자원에 대한 접근 허용
+                        .requestMatchers("/posts/**").authenticated() // 게시판에 접근할 때는 인증 필요
                         .requestMatchers("/", "/css/**", "/script/**", "/images/**", "/static/**").permitAll()
-                        // 회원가입 및 로그인 관련 경로는 인증 없이 접근 가능
                         .requestMatchers("/users/signup", "/users/login", "/users/signup_complete").permitAll()
-                        // 관광지 관련 API 및 모든 URL에 대해 접근 허용 (최종 프로젝트 단계에서 필요에 따라 제한 예정)
                         .requestMatchers("/touristSpot/**", "/api/**", "/api/tourist-accessible-info", "/touristSpot/Json/**", "/**").permitAll()
-                        // 게시판은 로그인 한 사람만 접근 허용
-                        .requestMatchers("/posts/**").authenticated()
-                        // 위에서 허용하지 않은 그 외 모든 요청은 인증 필요
-                        .anyRequest().authenticated()
+                        .anyRequest().authenticated() // 그 외는 인증 필요
                 )
 
                 // 커스텀 로그인 설정
