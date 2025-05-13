@@ -18,6 +18,7 @@ public class PostEntity {
     private String title;
     @Column(nullable = false, columnDefinition = "TEXT")
     private String content;
+    @Column(nullable = false)
     private String author;
     private LocalDateTime createdAt;
 }

@@ -1,8 +1,65 @@
 <!DOCTYPE html>
-<html lang="ko">
+<html lang="ko" xmlns:th="http://www.thymeleaf.org">
 <head>
   <meta charset="UTF-8">
   <title>게시글 보기</title>
+  <style>
+    body {
+          font-family: Arial, sans-serif;
+          background: #f9f9f9;
+          display: flex;
+          justify-content: center;
+          align-items: center;
+          height: 100vh;
+          margin: 0;
+      }
+      .view-container {
+          background: white;
+          padding: 30px;
+          border-radius: 8px;
+          box-shadow: 0 2px 6px rgba(0,0,0,0.1);
+          width: 500px;
+      }
+      h1 {
+          text-align: center;
+          margin-bottom: 20px;
+      }
+      p {
+          margin: 12px 0;
+          line-height: 1.6;
+      }
+      strong {
+          display: inline-block;
+          width: 80px;
+      }
+      .button-group {
+          display: flex;
+          justify-content: space-between;
+          margin-top: 24px;
+      }
+      button {
+          padding: 10px 20px;
+          background: #dc3545;
+          color: white;
+          border: none;
+          border-radius: 4px;
+          cursor: pointer;
+      }
+      button:hover {
+          background: #c82333;
+      }
+      a {
+          display: inline-block;
+          padding: 10px 20px;
+          background: #007bff;
+          color: white;
+          border-radius: 4px;
+          text-decoration: none;
+      }
+      a:hover {
+          background: #0056b3;
+      }
+    </style>
 </head>
 <body>
 <h1 th:text="${post.title}">게시글 제목</h1>
