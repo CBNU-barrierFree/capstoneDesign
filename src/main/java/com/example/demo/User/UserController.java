@@ -1,5 +1,6 @@
 package com.example.demo.User;
 
+import jakarta.servlet.http.HttpSession;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Controller;
@@ -20,6 +21,12 @@ public class UserController {
     public UserController(UserRepository userRepository, PasswordEncoder passwordEncoder) {
         this.userRepository = userRepository;
         this.passwordEncoder = passwordEncoder;
+    }
+
+    // 로그인 폼을 보여주는 GET 요청 처리
+    @GetMapping("/login")
+    public String showLoginForm() {
+        return "login";
     }
 
     // 회원가입 폼을 보여주는 GET 요청 처리
@@ -66,13 +73,22 @@ public class UserController {
         return "signup_complete"; // signup_complete.html 반환
     }
 
-    // 로그인 페이지 GET 처리
-    @GetMapping("/login")
-    public String showLoginForm(@RequestParam(name = "error", required = false) String error, // 로그인 실패 시 전달되는 파라미터
-                                Model model) { // 모델 객체를 통해 뷰에 값 전달
-        if (error != null) {
-            model.addAttribute("loginError", true); // 로그인 오류 표시를 위한 속성 추가
+    // 로그인 페이지 처리(POST)
+    @PostMapping("/login")
+    public String login(@RequestParam String username,
+                        @RequestParam String password,
+                        HttpSession session,
+                        Model model) {
+        UserEntity user = userRepository.findByUsername(username).orElse(null);
+        if (user != null && passwordEncoder.matches(password, user.getPassword())) {
+            // 로그인 성공 → 세션에 사용자 정보 저장
+            session.setAttribute("userId", user.getId());
+            session.setAttribute("nickname", user.getNickname());
+            return "redirect:/"; // 로그인 성공 시 메인 페이지로 이동
+        } else {
+            // 로그인 실패
+            model.addAttribute("loginError", true);
+            return "login"; // 다시 로그인 페이지로
         }
-        return "login"; // login.html 반환
     }
 }

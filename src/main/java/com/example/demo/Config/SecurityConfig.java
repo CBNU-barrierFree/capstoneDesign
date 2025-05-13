@@ -33,8 +33,8 @@ public class SecurityConfig {
 
                 // URL 경로에 따른 접근 권한 설정
                 .authorizeHttpRequests((requests) -> requests
-                        .requestMatchers("/posts/**").authenticated() // 게시판에 접근할 때는 인증 필요
-                        .requestMatchers("/", "/css/**", "/script/**", "/images/**", "/static/**").permitAll()
+                        .requestMatchers("/posts/new").authenticated() // 게시판에 접근할 때는 인증 필요
+                        .requestMatchers("/", "/css/**", "/script/**", "/images/**", "/static/**", "/posts/**").permitAll()
                         .requestMatchers("/users/signup", "/users/login", "/users/signup_complete").permitAll()
                         .requestMatchers("/touristSpot/**", "/api/**", "/api/tourist-accessible-info", "/touristSpot/Json/**", "/**").permitAll()
                         .anyRequest().authenticated() // 그 외는 인증 필요
@@ -42,11 +42,12 @@ public class SecurityConfig {
 
                 // 커스텀 로그인 설정
                 .formLogin((form) -> form
-                        .loginPage("/users/login") // 로그인 페이지 경로
-                        .loginProcessingUrl("/users/login") // 로그인 처리 URL
-                        .usernameParameter("username") // 로그인 폼의 사용자명 파라미터 이름
-                        .passwordParameter("password") // 로그인 폼의 비밀번호 파라미터 이름
+                        .loginPage("/users/login")
+                        .loginProcessingUrl("/users/login")
+                        .usernameParameter("username")
+                        .passwordParameter("password")
                         .successHandler((request, response, authentication) -> {
+                            // 1. 닉네임 쿠키 저장
                             Object principal = authentication.getPrincipal();
                             String nickname = "";
 
@@ -56,19 +57,26 @@ public class SecurityConfig {
 
                             Cookie nicknameCookie = new Cookie("nickname", nickname);
                             nicknameCookie.setPath("/");
-                            nicknameCookie.setHttpOnly(false); // JavaScript에서 접근 가능하게
+                            nicknameCookie.setHttpOnly(false); // JS에서도 접근 가능
                             response.addCookie(nicknameCookie);
 
-                            response.sendRedirect("/"); // 로그인 후 홈페이지로 이동
-                        })
+                            // 2. 사용자가 원래 가려던 요청으로 리디렉션
+                            var savedRequest = (org.springframework.security.web.savedrequest.SavedRequest)
+                                    request.getSession().getAttribute("SPRING_SECURITY_SAVED_REQUEST");
 
-                        .failureHandler((request, response, exception) -> {
-                            response.setStatus(HttpServletResponse.SC_UNAUTHORIZED); // 로그인 실패 시 HTTP 401 응답
+                            if (savedRequest != null) {
+                                response.sendRedirect(savedRequest.getRedirectUrl());
+                            } else {
+                                response.sendRedirect("/"); // 기본값
+                            }
                         })
-                        // 로그인 성공 후 이동할 기본 URL
-                        .failureUrl("/users/login?error=true") // 로그인 실패 시 이동할 URL
-                        .permitAll() // 로그인 관련 경로 접근 허용
+                        .failureHandler((request, response, exception) -> {
+                            response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
+                        })
+                        .failureUrl("/users/login?error=true")
+                        .permitAll()
                 )
+
 
                 // 로그아웃 설정
                 .logout((logout) -> logout

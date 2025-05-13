@@ -1,12 +1,16 @@
 package com.example.demo.Tour;
 
 import jakarta.persistence.*;
+import lombok.AllArgsConstructor;
 import lombok.Getter;
+import lombok.NoArgsConstructor;
 import lombok.Setter;
 
 @Entity // 이 클래스가 JPA 엔티티임을 명시
 @Getter // Lombok을 이용해 모든 필드의 getter 자동 생성
 @Setter // Lombok을 이용해 모든 필드의 setter 자동 생성
+@NoArgsConstructor
+@AllArgsConstructor
 @Table(name = "tour_entity") // 이 엔티티가 매핑될 테이블 이름 지정
 public class TourEntity {
 

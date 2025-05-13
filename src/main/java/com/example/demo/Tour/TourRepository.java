@@ -11,7 +11,6 @@ import java.util.Optional;
 public interface TourRepository extends JpaRepository<TourEntity, Long> {
     // title과 address가 모두 일치하는 관광지를 조회 (중복 체크용)
     Optional<TourEntity> findByTitleAndAddress(String title, String address);
-
     // JPQL을 사용한 커스텀 쿼리: 여러 필드를 기준으로 중복 관광지 조회
     @Query("SELECT t FROM TourEntity t WHERE t.title = :title AND t.address = :address " +
             "AND t.category1 = :category1 AND t.category2 = :category2 " +

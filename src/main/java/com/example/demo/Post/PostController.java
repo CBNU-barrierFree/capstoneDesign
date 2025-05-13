@@ -6,6 +6,8 @@ import org.springframework.ui.Model;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.servlet.mvc.support.RedirectAttributes;
+
 import java.time.LocalDateTime;
 import java.util.List;
 
@@ -55,7 +57,21 @@ public class PostController {
     }
 
     @PostMapping("/{id}/delete")
-    public String deletePost(@PathVariable Long id) {
+    public String deletePost(@PathVariable Long id, Authentication authentication, RedirectAttributes redirectAttributes) {
+        PostEntity post = postRepository.findById(id).orElse(null);
+
+        if (post == null) {
+            return "redirect:/posts";
+        }
+
+        CustomUserDetails userDetails = (CustomUserDetails) authentication.getPrincipal();
+        String currentNickname = userDetails.getNickname();
+
+        if (!post.getAuthor().equals(currentNickname)) {
+            redirectAttributes.addFlashAttribute("errorMessage", "해당 게시물을 삭제할 권한이 없습니다.");
+            return "redirect:/posts";
+        }
+
         postRepository.deleteById(id);
         return "redirect:/posts";
     }

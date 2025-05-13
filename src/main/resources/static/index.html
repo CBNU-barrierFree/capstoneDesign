@@ -89,6 +89,7 @@
 <header>
     <h1>🎨 관광지 배리어프리 정보</h1>
     <div class="nav-buttons" id="auth-section">
+        <a href="/posts">📝 게시판</a>
         <a href="/users/login">🔐 로그인</a>
         <a href="/users/signup">📝 회원가입</a>
     </div>
@@ -104,7 +105,6 @@
     <label><input type="checkbox" class="barrier-filter" value="시각장애인 안내견 동반 가능"> 안내견 동반 가능</label>
     <label><input type="checkbox" class="barrier-filter" value="장애인 안내 점자 있음"> 점자 안내 있음</label>
     <label><input type="checkbox" class="barrier-filter" value="오디오 가이드 있음(한국어)"> 오디오 가이드</label>
-    <label><input type="checkbox" id="favoriteOnly"> ✨ 즐겨찾기만 보기</label>
 </div>
 
 <div id="map"></div>
@@ -117,58 +117,51 @@
     const itemsPerPage = 10;
     let map, clusterer, myMarker = null;
     let myLat = null, myLng = null;
-    const favorites = JSON.parse(localStorage.getItem('favorites') || '[]');
+    let allMarkers = [];
+    let selectedInfowindow = null; // 현재 열린 말풍선
 
-    function toggleFavorite(title) {
-        const index = favorites.indexOf(title);
-        if (index > -1) favorites.splice(index, 1);
-        else favorites.push(title);
-        localStorage.setItem('favorites', JSON.stringify(favorites));
-        filterPlaces();
-    }
+    const favorites = JSON.parse(localStorage.getItem('favorites') || '[]');
 
     function initMap() {
         const container = document.getElementById('map');
-        const options = { center: new kakao.maps.LatLng(37.5665, 126.9780), level: 7 };
-        map = new kakao.maps.Map(container, options);
+        map = new kakao.maps.Map(container, { center: new kakao.maps.LatLng(37.5665, 126.9780), level: 7 });
         clusterer = new kakao.maps.MarkerClusterer({ map, averageCenter: true, minLevel: 5 });
         kakao.maps.event.addListener(map, 'idle', filterPlaces);
     }
 
     function addAllMarkers(places) {
         clusterer.clear();
-        const markerList = [];
+        allMarkers = [];
+
         places.forEach(place => {
             const match = place.coordinates?.match(/N([\d.]+), E([\d.]+)/);
             if (match) {
-                const lat = parseFloat(match[1]);
-                const lng = parseFloat(match[2]);
-                const latlng = new kakao.maps.LatLng(lat, lng);
+                const latlng = new kakao.maps.LatLng(parseFloat(match[1]), parseFloat(match[2]));
                 const marker = new kakao.maps.Marker({ position: latlng, title: place.title });
                 const infowindow = new kakao.maps.InfoWindow({ content: `<div style='padding:8px;font-size:14px;'><strong>${place.title}</strong></div>` });
-                kakao.maps.event.addListener(marker, 'mouseover', () => infowindow.open(map, marker));
-                kakao.maps.event.addListener(marker, 'mouseout', () => infowindow.close());
-                markerList.push(marker);
+
+                // 마커 클릭
+                kakao.maps.event.addListener(marker, 'click', () => {
+                    if (selectedInfowindow) selectedInfowindow.close();
+                    infowindow.open(map, marker);
+                    selectedInfowindow = infowindow;
+                    map.setCenter(marker.getPosition());
+                });
+
+                // 마우스 오버 (선택된 게 아닐 때만 열기)
+                kakao.maps.event.addListener(marker, 'mouseover', () => {
+                    if (selectedInfowindow !== infowindow) infowindow.open(map, marker);
+                });
+
+                kakao.maps.event.addListener(marker, 'mouseout', () => {
+                    if (selectedInfowindow !== infowindow) infowindow.close();
+                });
+
+                allMarkers.push({ marker, infowindow, title: place.title });
             }
         });
-        clusterer.addMarkers(markerList);
-    }
 
-    function renderPagination(totalItems) {
-        const totalPages = Math.ceil(totalItems / itemsPerPage);
-        const pagination = document.createElement('div');
-        pagination.className = 'pagination';
-        for (let i = 1; i <= totalPages; i++) {
-            const btn = document.createElement('button');
-            btn.textContent = i;
-            if (i === currentPage) btn.disabled = true;
-            btn.addEventListener('click', () => {
-                currentPage = i;
-                renderPlaces(filteredPlaces);
-            });
-            pagination.appendChild(btn);
-        }
-        document.getElementById('places').appendChild(pagination);
+        clusterer.addMarkers(allMarkers.map(m => m.marker));
     }
 
     function renderPlaces(places) {
@@ -176,33 +169,85 @@
         container.innerHTML = '';
         const start = (currentPage - 1) * itemsPerPage;
         const pageItems = places.slice(start, start + itemsPerPage);
+
         pageItems.forEach(place => {
             const div = document.createElement('div');
             div.className = 'place';
             const isFav = favorites.includes(place.title);
-            const match = place.coordinates?.match(/N([\d.]+), E([\d.]+)/);
-            const lat = match ? parseFloat(match[1]) : null;
-            const lng = match ? parseFloat(match[2]) : null;
 
             div.innerHTML = `
-          <div class="favorite ${isFav ? 'active' : ''}" onclick="toggleFavorite('${place.title}')">
-            ${isFav ? '★' : '☆'}
-          </div>
-          <h2>${place.title}</h2>
-          <p><strong>📍 주소:</strong> ${place.address}</p>
-          <p><strong>🕒 운영시간:</strong> ${place.description}</p>
-          <p><strong>📅 등록일:</strong> ${place.issuedDate}</p>
-          <p><strong>📞 연락처:</strong> ${place.tel || '정보 없음'}</p>
-          <p><strong>🌐 홈페이지:</strong> ${place.url ? `<a href='http://${place.url}' target='_blank'>${place.url}</a>` : '정보 없음'}</p>
-          <p><strong>📁 카테고리:</strong> ${place.category1} / ${place.category2}</p>
-          <p><strong>♿ 배리어프리 정보:</strong> ${place.subDescription}</p>
-          <p><strong>📌 좌표:</strong> ${place.coordinates}</p>
-        `;
+              <h2>${place.title}</h2>
+              <p><strong>📍 주소:</strong> ${place.address}</p>
+              <p><strong>🕒 운영시간:</strong> ${place.description}</p>
+              <p><strong>📅 등록일:</strong> ${place.issuedDate}</p>
+              <p><strong>📞 연락처:</strong> ${place.tel || '정보 없음'}</p>
+              <p><strong>🌐 홈페이지:</strong> ${place.url ? `<a href='http://${place.url}' target='_blank'>${place.url}</a>` : '정보 없음'}</p>
+              <p><strong>📁 카테고리:</strong> ${place.category1} / ${place.category2}</p>
+              <p><strong>♿ 배리어프리 정보:</strong> ${place.subDescription}</p>
+              <p><strong>📌 좌표:</strong> ${place.coordinates}</p>
+            `;
+
+            // 목록 클릭 시 해당 마커로 이동 + 말풍선 관리
+            div.addEventListener('click', () => {
+                const markerObj = allMarkers.find(m => m.title === place.title);
+                if (markerObj) {
+                    if (selectedInfowindow) selectedInfowindow.close();
+                    markerObj.infowindow.open(map, markerObj.marker);
+                    selectedInfowindow = markerObj.infowindow;
+                    map.setCenter(markerObj.marker.getPosition());
+                }
+            });
+
             container.appendChild(div);
         });
 
         renderPagination(places.length);
         addAllMarkers(places);
+    }
+
+    function renderPagination(totalItems) {
+        const container = document.createElement('div');
+        container.className = 'pagination';
+
+        const totalPages = Math.ceil(totalItems / itemsPerPage);
+        const pageGroupSize = 10;
+        const currentGroup = Math.floor((currentPage - 1) / pageGroupSize);
+
+        const startPage = currentGroup * pageGroupSize + 1;
+        const endPage = Math.min(startPage + pageGroupSize - 1, totalPages);
+
+        if (startPage > 1) {
+            const prevBtn = document.createElement('button');
+            prevBtn.textContent = '◀';
+            prevBtn.addEventListener('click', () => {
+                currentPage = startPage - 1;
+                renderPlaces(filteredPlaces);
+            });
+            container.appendChild(prevBtn);
+        }
+
+        for (let i = startPage; i <= endPage; i++) {
+            const btn = document.createElement('button');
+            btn.textContent = i;
+            if (i === currentPage) btn.disabled = true;
+            btn.addEventListener('click', () => {
+                currentPage = i;
+                renderPlaces(filteredPlaces);
+            });
+            container.appendChild(btn);
+        }
+
+        if (endPage < totalPages) {
+            const nextBtn = document.createElement('button');
+            nextBtn.textContent = '▶';
+            nextBtn.addEventListener('click', () => {
+                currentPage = endPage + 1;
+                renderPlaces(filteredPlaces);
+            });
+            container.appendChild(nextBtn);
+        }
+
+        document.getElementById('places').appendChild(container);
     }
 
     function filterPlaces() {
@@ -242,7 +287,6 @@
         return R * c;
     }
 
-    // 내 위치 가져와서 정렬
     function sortByMyLocation() {
         if (!navigator.geolocation) {
             alert('위치 정보를 지원하지 않는 브라우저입니다.');
@@ -292,9 +336,9 @@
         if (nicknameCookie && authSection) {
             const nickname = decodeURIComponent(nicknameCookie.split('=')[1]);
             authSection.innerHTML = `
-      <span><strong>${nickname}</strong> 님</span>
-      <a href="/users/logout">🚪 로그아웃</a>
-    `;
+            <span><strong>${nickname}</strong> 님</span>
+            <a href="/users/logout">🚪 로그아웃</a>
+        `;
         }
     });
 
@@ -311,6 +355,7 @@
             document.getElementById('places').innerHTML = '데이터를 불러오는 중 오류가 발생했습니다.';
         });
 </script>
+
 
 </body>
 </html>

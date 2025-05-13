@@ -1,14 +1,19 @@
 <!DOCTYPE html>
-<html lang="ko">
+<html lang="ko" xmlns:th="http://www.thymeleaf.org">
 <head>
   <meta charset="UTF-8">
   <title>게시글 목록</title>
 </head>
 <body>
 <h1>게시글 목록</h1>
+
+<!-- 에러 메시지 출력 -->
+<div th:if="${errorMessage}" style="color:red; font-weight:bold;">
+  <p th:text="${errorMessage}"></p>
+</div>
+
 <a href="/posts/new">글 작성하기</a>
 <ul>
-  <!-- 반복문으로 게시글 리스트 출력 -->
   <li th:each="post : ${posts}">
     <a th:href="@{'/posts/' + ${post.id}}" th:text="${post.title}">게시글 제목</a>
     <span th:text="${post.author}">작성자</span>
