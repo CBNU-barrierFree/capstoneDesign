@@ -36,9 +36,9 @@ src/
 │    ├── java/com/example/demo/
 │    │   ├── User/                # 회원 관련 (UserController, UserEntity, UserRepository 등)
 │    │   ├── Tour/                # 관광지 관련 (TourController, TourEntity, TourRepository 등)
-│    │   ├── Post/                # 게시글/댓글 관련
-│    │   ├── API/                 # OpenAPI 연동 클래스
+│    │   ├── Post/                # 게시글 관련(PostEntity, PostService, PostController 등)
 │    │   ├── Config/              # SecurityConfig, SchedulingConfig 등
+│    │   ├── Comment/             # 게시글의 댓글 관련 (CommentEntity, CommentService, CommentController 등)
 │    │   └── DTO/                 # 응답 파싱용 DTO들 (TourDTO, TourApiResponseDTO 등)
 │    ├─── resources/
 │    ├── templates/           # Thymeleaf HTML 파일
