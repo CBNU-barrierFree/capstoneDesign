@@ -336,6 +336,7 @@
         if (nicknameCookie && authSection) {
             const nickname = decodeURIComponent(nicknameCookie.split('=')[1]);
             authSection.innerHTML = `
+            <a href="/posts">📝 게시판</a>
             <span><strong>${nickname}</strong> 님</span>
             <a href="/users/logout">🚪 로그아웃</a>
         `;

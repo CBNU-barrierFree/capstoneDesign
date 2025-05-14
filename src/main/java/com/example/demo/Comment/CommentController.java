@@ -19,8 +19,8 @@ public class CommentController {
 
     // 댓글 추가
     @PostMapping("/add")
-    public String addComment(@RequestParam Long postId,
-                             @RequestParam String content,
+    public String addComment(@RequestParam("postId") Long postId,
+                             @RequestParam("content") String content,
                              HttpSession session) {
 
         UserEntity user = (UserEntity) session.getAttribute("user");
@@ -34,7 +34,7 @@ public class CommentController {
 
     // 댓글 삭제
     @PostMapping("/{commentId}/delete")
-    public String deleteComment(@PathVariable Long commentId, HttpSession session) {
+    public String deleteComment(@PathVariable("commentId") Long commentId, HttpSession session) {
         UserEntity user = (UserEntity) session.getAttribute("user");
         if (user == null) {
             return "redirect:/users/login";

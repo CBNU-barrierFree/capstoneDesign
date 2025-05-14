@@ -3,61 +3,152 @@
 <head>
   <meta charset="UTF-8">
   <title>게시글 보기</title>
+  <style>
+    body {
+            font-family: Arial, sans-serif;
+            background: #f9f9f9;
+            margin: 0;
+            padding: 0;
+            display: flex;
+            justify-content: center;
+            padding-top: 40px;
+        }
+
+        .view-container {
+            background: white;
+            padding: 30px;
+            border-radius: 8px;
+            box-shadow: 0 2px 6px rgba(0,0,0,0.1);
+            width: 700px;
+            box-sizing: border-box;
+        }
+
+        h1 {
+            margin-bottom: 20px;
+            font-size: 28px;
+            border-bottom: 1px solid #ddd;
+            padding-bottom: 10px;
+        }
+
+        p {
+            margin: 8px 0;
+            line-height: 1.6;
+            font-size: 16px;
+        }
+
+        .meta-info {
+            color: #555;
+            font-size: 14px;
+            margin-bottom: 20px;
+        }
+
+        .button-group {
+            margin-top: 20px;
+        }
+
+        button, a.button-link {
+            display: inline-block;
+            padding: 10px 20px;
+            background: #007bff;
+            color: white;
+            text-decoration: none;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            margin-right: 8px;
+        }
+
+        button:hover, a.button-link:hover {
+            background: #0056b3;
+        }
+
+        .delete-button {
+            background: #dc3545;
+        }
+
+        .delete-button:hover {
+            background: #c82333;
+        }
+
+        hr {
+            margin: 30px 0;
+        }
+
+        textarea {
+            width: 100%;
+            padding: 10px;
+            border-radius: 4px;
+            border: 1px solid #ccc;
+            margin-top: 10px;
+        }
+
+        .comment-section {
+            margin-top: 30px;
+        }
+
+        ul {
+            list-style: none;
+            padding: 0;
+        }
+
+        li {
+            margin-bottom: 16px;
+            padding-bottom: 10px;
+            border-bottom: 1px solid #ddd;
+        }
+
+  </style>
 </head>
 <body>
+<div class="view-container">
+  <!-- 게시글 정보 -->
+  <h1 th:text="${post.title}">게시글 제목</h1>
+  <p><strong>작성자:</strong> <span th:text="${post.author}">작성자</span></p>
+  <p><strong>작성일:</strong> <span th:text="${#temporals.format(post.createdAt, 'yyyy-MM-dd HH:mm')}">작성일</span></p>
+  <p><strong>내용:</strong></p>
+  <p th:text="${post.content}">내용</p>
 
-<!-- 게시글 정보 -->
-<h1 th:text="${post.title}">게시글 제목</h1>
-<p><strong>작성자:</strong> <span th:text="${post.author}">작성자</span></p>
-<p><strong>작성일:</strong> <span th:text="${#temporals.format(post.createdAt, 'yyyy-MM-dd HH:mm')}">작성일</span></p>
-<p><strong>내용:</strong></p>
-<p th:text="${post.content}">내용</p>
-
-<!-- 게시글 삭제 버튼 -->
-<form th:action="@{'/posts/' + ${post.id} + '/delete'}" method="post">
-  <button type="submit">삭제</button>
-</form>
-<a href="/posts">목록으로</a>
-
-<hr/>
-
-<!-- 댓글 작성 폼 (로그인한 사용자만) -->
-<div th:if="${session.nickname != null}">
-  <form th:action="@{/comments/add}" method="post">
-    <input type="hidden" name="postId" th:value="${post.id}" />
-    <textarea name="content" rows="3" cols="50" placeholder="댓글을 입력하세요" required></textarea><br/>
-    <button type="submit">댓글 작성</button>
+  <!-- 게시글 삭제 버튼 -->
+  <form th:action="@{'/posts/' + ${post.id} + '/delete'}" method="post" style="display:inline;">
+    <button class="delete-button" type="submit">삭제</button>
   </form>
-</div>
+  <a class="button-link" href="/posts">📋 목록으로</a>
+  <a class="button-link" href="/">🏠 홈으로</a>
 
-<!-- 비로그인 상태 안내 -->
-<div sec:authorize="isAuthenticated()">
-  <!-- 로그인한 사용자에게만 보이는 댓글 폼 -->
-</div>
+  <hr/>
 
-<div sec:authorize="isAnonymous()">
-  <p><a th:href="@{/users/login}">로그인</a> 후 댓글을 작성할 수 있습니다.</p>
-</div>
-
-
-<hr/>
-
-<!-- 댓글 목록 -->
-<h3>댓글 목록</h3>
-<ul>
-  <li th:each="comment : ${comments}">
-    <strong th:text="${comment.user.nickname}">닉네임</strong>:
-    <span th:text="${comment.content}">내용</span>
-    <small th:text="${#temporals.format(comment.createdAt, 'yyyy-MM-dd HH:mm')}">작성일</small>
-
-    <!--댓글 삭제-->
-    <form th:if="${session.user != null and session.user.id == comment.user.id}"
-          th:action="@{/comments/{id}/delete(id=${comment.id})}" method="post"
-          style="display:inline">
-      <button type="submit">삭제</button>
+  <!-- 댓글 작성 폼 (로그인한 사용자만) -->
+  <div th:if="${session.nickname != null}">
+    <form th:action="@{/comments/add}" method="post">
+      <input type="hidden" name="postId" th:value="${post.id}" />
+      <textarea name="content" rows="3" placeholder="댓글을 입력하세요" required></textarea><br/>
+      <button type="submit">댓글 작성</button>
     </form>
-  </li>
-</ul>
+  </div>
 
+  <!-- 비로그인 상태 안내 -->
+  <div sec:authorize="isAnonymous()">
+    <p><a th:href="@{/users/login}">로그인</a> 후 댓글을 작성할 수 있습니다.</p>
+  </div>
+
+  <hr/>
+
+  <!-- 댓글 목록 -->
+  <h3>댓글 목록</h3>
+  <ul>
+    <li th:each="comment : ${comments}">
+      <strong th:text="${comment.user.nickname}">닉네임</strong>:
+      <span th:text="${comment.content}">내용</span>
+      <small th:text="${#temporals.format(comment.createdAt, 'yyyy-MM-dd HH:mm')}">작성일</small>
+
+      <!--댓글 삭제-->
+      <form th:if="${session.user != null and session.user.id == comment.user.id}"
+            th:action="@{/comments/{id}/delete(id=${comment.id})}" method="post"
+            style="display:inline;">
+        <button type="submit">삭제</button>
+      </form>
+    </li>
+  </ul>
+</div>
 </body>
 </html>

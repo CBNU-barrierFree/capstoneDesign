@@ -54,7 +54,7 @@ public class PostController {
     }
 
     @GetMapping("/{id}")
-    public String viewPost(@PathVariable Long id, Model model) {
+    public String viewPost(@PathVariable("id") Long id, Model model) {
         PostEntity post = postRepository.findById(id).orElseThrow();
         List<CommentEntity> comments = commentService.getCommentsByPost(id);
 
@@ -65,7 +65,7 @@ public class PostController {
 
 
     @PostMapping("/{id}/delete")
-    public String deletePost(@PathVariable Long id, Authentication authentication, RedirectAttributes redirectAttributes) {
+    public String deletePost(@PathVariable("id") Long id, Authentication authentication, RedirectAttributes redirectAttributes) {
         PostEntity post = postRepository.findById(id).orElse(null);
 
         if (post == null) {
