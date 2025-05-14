@@ -82,6 +82,7 @@ public class UserController {
         UserEntity user = userRepository.findByUsername(username).orElse(null);
         if (user != null && passwordEncoder.matches(password, user.getPassword())) {
             // 로그인 성공 → 세션에 사용자 정보 저장
+            session.setAttribute("user", user);
             session.setAttribute("userId", user.getId());
             session.setAttribute("nickname", user.getNickname());
             return "redirect:/"; // 로그인 성공 시 메인 페이지로 이동

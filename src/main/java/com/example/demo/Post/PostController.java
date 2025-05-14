@@ -1,5 +1,7 @@
 package com.example.demo.Post;
 
+import com.example.demo.Comment.CommentEntity;
+import com.example.demo.Comment.CommentService;
 import com.example.demo.User.CustomUserDetails; // 사용자 인증 정보에서 nickname 추출하려면 필요
 import org.springframework.security.core.Authentication;
 import org.springframework.ui.Model;
@@ -17,6 +19,8 @@ public class PostController {
 
     @Autowired
     private PostRepository postRepository;
+    @Autowired
+    private CommentService commentService;
 
     @GetMapping
     public String listPosts(Model model) {
@@ -51,10 +55,14 @@ public class PostController {
 
     @GetMapping("/{id}")
     public String viewPost(@PathVariable Long id, Model model) {
-        PostEntity post = postRepository.findById(id).orElse(null);
+        PostEntity post = postRepository.findById(id).orElseThrow();
+        List<CommentEntity> comments = commentService.getCommentsByPost(id);
+
         model.addAttribute("post", post);
+        model.addAttribute("comments", comments);
         return "post/view";
     }
+
 
     @PostMapping("/{id}/delete")
     public String deletePost(@PathVariable Long id, Authentication authentication, RedirectAttributes redirectAttributes) {

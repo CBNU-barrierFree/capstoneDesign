@@ -1,19 +1,63 @@
 <!DOCTYPE html>
-<html lang="ko">
+<html lang="ko" xmlns:th="http://www.thymeleaf.org" xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
 <head>
   <meta charset="UTF-8">
   <title>게시글 보기</title>
 </head>
 <body>
+
+<!-- 게시글 정보 -->
 <h1 th:text="${post.title}">게시글 제목</h1>
 <p><strong>작성자:</strong> <span th:text="${post.author}">작성자</span></p>
-<p><strong>작성일:</strong> <span th:text="${post.createdAt}">작성일</span></p>
+<p><strong>작성일:</strong> <span th:text="${#temporals.format(post.createdAt, 'yyyy-MM-dd HH:mm')}">작성일</span></p>
 <p><strong>내용:</strong></p>
 <p th:text="${post.content}">내용</p>
 
+<!-- 게시글 삭제 버튼 -->
 <form th:action="@{'/posts/' + ${post.id} + '/delete'}" method="post">
   <button type="submit">삭제</button>
 </form>
 <a href="/posts">목록으로</a>
+
+<hr/>
+
+<!-- 댓글 작성 폼 (로그인한 사용자만) -->
+<div th:if="${session.nickname != null}">
+  <form th:action="@{/comments/add}" method="post">
+    <input type="hidden" name="postId" th:value="${post.id}" />
+    <textarea name="content" rows="3" cols="50" placeholder="댓글을 입력하세요" required></textarea><br/>
+    <button type="submit">댓글 작성</button>
+  </form>
+</div>
+
+<!-- 비로그인 상태 안내 -->
+<div sec:authorize="isAuthenticated()">
+  <!-- 로그인한 사용자에게만 보이는 댓글 폼 -->
+</div>
+
+<div sec:authorize="isAnonymous()">
+  <p><a th:href="@{/users/login}">로그인</a> 후 댓글을 작성할 수 있습니다.</p>
+</div>
+
+
+<hr/>
+
+<!-- 댓글 목록 -->
+<h3>댓글 목록</h3>
+<ul>
+  <li th:each="comment : ${comments}">
+    <strong th:text="${comment.user.nickname}">닉네임</strong>:
+    <span th:text="${comment.content}">내용</span>
+    <small th:text="${#temporals.format(comment.createdAt, 'yyyy-MM-dd HH:mm')}">작성일</small>
+
+    <!--댓글 삭제-->
+    <form th:if="${session.user != null and session.user.id == comment.user.id}"
+          th:action="@{/comments/{id}/delete(id=${comment.id})}" method="post"
+          style="display:inline">
+      <button type="submit">삭제</button>
+    </form>
+  </li>
+</ul>
+
 </body>
 </html>

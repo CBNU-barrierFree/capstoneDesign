@@ -12,7 +12,6 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
 import jakarta.servlet.http.Cookie;
 
-
 @Configuration // 이 클래스가 Spring 설정 클래스임을 나타냄
 @EnableWebSecurity // Spring Security 웹 보안을 활성화
 public class SecurityConfig {
@@ -47,29 +46,30 @@ public class SecurityConfig {
                         .usernameParameter("username")
                         .passwordParameter("password")
                         .successHandler((request, response, authentication) -> {
-                            // 1. 닉네임 쿠키 저장
                             Object principal = authentication.getPrincipal();
                             String nickname = "";
 
                             if (principal instanceof com.example.demo.User.CustomUserDetails customUser) {
                                 nickname = customUser.getNickname();
+                                request.getSession().setAttribute("user", customUser.getUserEntity()); // ✅ 이 줄 추가!!
+                                request.getSession().setAttribute("nickname", nickname);              // 선택 사항
                             }
 
                             Cookie nicknameCookie = new Cookie("nickname", nickname);
                             nicknameCookie.setPath("/");
-                            nicknameCookie.setHttpOnly(false); // JS에서도 접근 가능
+                            nicknameCookie.setHttpOnly(false);
                             response.addCookie(nicknameCookie);
 
-                            // 2. 사용자가 원래 가려던 요청으로 리디렉션
                             var savedRequest = (org.springframework.security.web.savedrequest.SavedRequest)
                                     request.getSession().getAttribute("SPRING_SECURITY_SAVED_REQUEST");
 
                             if (savedRequest != null) {
                                 response.sendRedirect(savedRequest.getRedirectUrl());
                             } else {
-                                response.sendRedirect("/"); // 기본값
+                                response.sendRedirect("/");
                             }
                         })
+
                         .failureHandler((request, response, exception) -> {
                             response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
                         })
