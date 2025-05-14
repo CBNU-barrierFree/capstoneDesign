@@ -12,7 +12,6 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
 import jakarta.servlet.http.Cookie;
 
-
 @Configuration // 이 클래스가 Spring 설정 클래스임을 나타냄
 @EnableWebSecurity // Spring Security 웹 보안을 활성화
 public class SecurityConfig {
@@ -33,47 +32,51 @@ public class SecurityConfig {
 
                 // URL 경로에 따른 접근 권한 설정
                 .authorizeHttpRequests((requests) -> requests
-                        // 정적 자원에 대한 접근 허용
-                        .requestMatchers("/", "/css/**", "/script/**", "/images/**", "/static/**").permitAll()
-                        // 회원가입 및 로그인 관련 경로는 인증 없이 접근 가능
+                        .requestMatchers("/posts/new").authenticated() // 게시판에 접근할 때는 인증 필요
+                        .requestMatchers("/", "/css/**", "/script/**", "/images/**", "/static/**", "/posts/**").permitAll()
                         .requestMatchers("/users/signup", "/users/login", "/users/signup_complete").permitAll()
-                        // 관광지 관련 API 및 모든 URL에 대해 접근 허용 (최종 프로젝트 단계에서 필요에 따라 제한 예정)
                         .requestMatchers("/touristSpot/**", "/api/**", "/api/tourist-accessible-info", "/touristSpot/Json/**", "/**").permitAll()
-                        // 게시판은 로그인 한 사람만 접근 허용
-                        .requestMatchers("/posts/**").authenticated()
-                        // 위에서 허용하지 않은 그 외 모든 요청은 인증 필요
-                        .anyRequest().authenticated()
+                        .anyRequest().authenticated() // 그 외는 인증 필요
                 )
 
                 // 커스텀 로그인 설정
                 .formLogin((form) -> form
-                        .loginPage("/users/login") // 로그인 페이지 경로
-                        .loginProcessingUrl("/users/login") // 로그인 처리 URL
-                        .usernameParameter("username") // 로그인 폼의 사용자명 파라미터 이름
-                        .passwordParameter("password") // 로그인 폼의 비밀번호 파라미터 이름
+                        .loginPage("/users/login")
+                        .loginProcessingUrl("/users/login")
+                        .usernameParameter("username")
+                        .passwordParameter("password")
                         .successHandler((request, response, authentication) -> {
                             Object principal = authentication.getPrincipal();
                             String nickname = "";
 
                             if (principal instanceof com.example.demo.User.CustomUserDetails customUser) {
                                 nickname = customUser.getNickname();
+                                request.getSession().setAttribute("user", customUser.getUserEntity()); // ✅ 이 줄 추가!!
+                                request.getSession().setAttribute("nickname", nickname);              // 선택 사항
                             }
 
                             Cookie nicknameCookie = new Cookie("nickname", nickname);
                             nicknameCookie.setPath("/");
-                            nicknameCookie.setHttpOnly(false); // JavaScript에서 접근 가능하게
+                            nicknameCookie.setHttpOnly(false);
                             response.addCookie(nicknameCookie);
 
-                            response.sendRedirect("/"); // 로그인 후 홈페이지로 이동
+                            var savedRequest = (org.springframework.security.web.savedrequest.SavedRequest)
+                                    request.getSession().getAttribute("SPRING_SECURITY_SAVED_REQUEST");
+
+                            if (savedRequest != null) {
+                                response.sendRedirect(savedRequest.getRedirectUrl());
+                            } else {
+                                response.sendRedirect("/");
+                            }
                         })
 
                         .failureHandler((request, response, exception) -> {
-                            response.setStatus(HttpServletResponse.SC_UNAUTHORIZED); // 로그인 실패 시 HTTP 401 응답
+                            response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
                         })
-                        // 로그인 성공 후 이동할 기본 URL
-                        .failureUrl("/users/login?error=true") // 로그인 실패 시 이동할 URL
-                        .permitAll() // 로그인 관련 경로 접근 허용
+                        .failureUrl("/users/login?error=true")
+                        .permitAll()
                 )
+
 
                 // 로그아웃 설정
                 .logout((logout) -> logout

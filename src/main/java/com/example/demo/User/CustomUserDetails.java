@@ -4,6 +4,7 @@ import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.List;
 
 // UserEntity 기반으로 Spring Security의 UserDetails를 구현한 클래스
 public class CustomUserDetails implements UserDetails {
@@ -19,10 +20,15 @@ public class CustomUserDetails implements UserDetails {
         return user.getNickname();
     }
 
+    public UserEntity getUser() { return user; }
+
     // 사용자 이름 반환
     public String getName() {
         return user.getName();
     }
+
+    // 세션에 넣기 위해 UserEntity 반환하는 메서드
+    public UserEntity getUserEntity() { return this.user; }
 
     // 사용자의 권한 목록 반환 (여기서는 ROLE_ 접두어를 붙인 단일 권한 부여)
     @Override

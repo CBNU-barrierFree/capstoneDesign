@@ -105,7 +105,6 @@
     <label><input type="checkbox" class="barrier-filter" value="시각장애인 안내견 동반 가능"> 안내견 동반 가능</label>
     <label><input type="checkbox" class="barrier-filter" value="장애인 안내 점자 있음"> 점자 안내 있음</label>
     <label><input type="checkbox" class="barrier-filter" value="오디오 가이드 있음(한국어)"> 오디오 가이드</label>
-    <label><input type="checkbox" id="favoriteOnly"> ✨ 즐겨찾기만 보기</label>
 </div>
 
 <div id="map"></div>
@@ -119,17 +118,9 @@
     let map, clusterer, myMarker = null;
     let myLat = null, myLng = null;
     let allMarkers = [];
-    let selectedInfowindow = null; // ✅ 현재 열린 말풍선
+    let selectedInfowindow = null; // 현재 열린 말풍선
 
     const favorites = JSON.parse(localStorage.getItem('favorites') || '[]');
-
-    function toggleFavorite(title) {
-        const index = favorites.indexOf(title);
-        if (index > -1) favorites.splice(index, 1);
-        else favorites.push(title);
-        localStorage.setItem('favorites', JSON.stringify(favorites));
-        filterPlaces();
-    }
 
     function initMap() {
         const container = document.getElementById('map');
@@ -185,9 +176,6 @@
             const isFav = favorites.includes(place.title);
 
             div.innerHTML = `
-              <div class="favorite ${isFav ? 'active' : ''}" onclick="toggleFavorite('${place.title}')">
-                ${isFav ? '★' : '☆'}
-              </div>
               <h2>${place.title}</h2>
               <p><strong>📍 주소:</strong> ${place.address}</p>
               <p><strong>🕒 운영시간:</strong> ${place.description}</p>
@@ -199,7 +187,7 @@
               <p><strong>📌 좌표:</strong> ${place.coordinates}</p>
             `;
 
-            // ✅ 목록 클릭 시 해당 마커로 이동 + 말풍선 관리
+            // 목록 클릭 시 해당 마커로 이동 + 말풍선 관리
             div.addEventListener('click', () => {
                 const markerObj = allMarkers.find(m => m.title === place.title);
                 if (markerObj) {
