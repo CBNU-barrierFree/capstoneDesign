@@ -51,8 +51,8 @@ public class SecurityConfig {
 
                             if (principal instanceof com.example.demo.User.CustomUserDetails customUser) {
                                 nickname = customUser.getNickname();
-                                request.getSession().setAttribute("user", customUser.getUserEntity()); // ✅ 이 줄 추가!!
-                                request.getSession().setAttribute("nickname", nickname);              // 선택 사항
+                                request.getSession().setAttribute("user", customUser.getUserEntity());
+                                request.getSession().setAttribute("nickname", nickname);
                             }
 
                             Cookie nicknameCookie = new Cookie("nickname", nickname);

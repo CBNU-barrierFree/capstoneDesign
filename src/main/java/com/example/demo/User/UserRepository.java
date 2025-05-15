@@ -10,4 +10,3 @@ public interface UserRepository extends JpaRepository<UserEntity, Long> {
     // 닉네임을 기준으로 사용자 정보를 조회 (회원가입 시 중복 확인용)
     Optional<UserEntity> findByNickname(String nickname);
 }
-
