@@ -72,24 +72,4 @@ public class UserController {
     public String signupComplete() {
         return "signup_complete"; // signup_complete.html 반환
     }
-
-    // 로그인 페이지 처리(POST)
-    @PostMapping("/login")
-    public String login(@RequestParam String username,
-                        @RequestParam String password,
-                        HttpSession session,
-                        Model model) {
-        UserEntity user = userRepository.findByUsername(username).orElse(null);
-        if (user != null && passwordEncoder.matches(password, user.getPassword())) {
-            // 로그인 성공 → 세션에 사용자 정보 저장
-            session.setAttribute("user", user);
-            session.setAttribute("userId", user.getId());
-            session.setAttribute("nickname", user.getNickname());
-            return "redirect:/"; // 로그인 성공 시 메인 페이지로 이동
-        } else {
-            // 로그인 실패
-            model.addAttribute("loginError", true);
-            return "login"; // 다시 로그인 페이지로
-        }
-    }
 }

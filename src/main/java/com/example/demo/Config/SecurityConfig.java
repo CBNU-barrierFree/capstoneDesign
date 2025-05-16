@@ -54,7 +54,6 @@ public class SecurityConfig {
                                 request.getSession().setAttribute("user", customUser.getUserEntity());
                                 request.getSession().setAttribute("nickname", nickname);
                             }
-
                             Cookie nicknameCookie = new Cookie("nickname", nickname);
                             nicknameCookie.setPath("/");
                             nicknameCookie.setHttpOnly(false);
@@ -76,7 +75,6 @@ public class SecurityConfig {
                         .failureUrl("/users/login?error=true")
                         .permitAll()
                 )
-
 
                 // 로그아웃 설정
                 .logout((logout) -> logout
