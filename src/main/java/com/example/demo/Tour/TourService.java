@@ -1,7 +1,7 @@
 package com.example.demo.Tour;
 
-import com.example.demo.DTO.TourApiResponseDTO;
-import com.example.demo.DTO.TourDTO;
+import com.example.demo.Tour.DTO.TourApiResponseDTO;
+import com.example.demo.Tour.DTO.TourDTO;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
 import java.util.List;

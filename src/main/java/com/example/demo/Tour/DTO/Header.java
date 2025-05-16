@@ -1,4 +1,4 @@
-package com.example.demo.DTO;
+package com.example.demo.Tour.DTO;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import lombok.Getter;
