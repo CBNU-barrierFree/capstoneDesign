@@ -32,7 +32,7 @@ public class SecurityConfig {
 
                 // URL 경로에 따른 접근 권한 설정
                 .authorizeHttpRequests((requests) -> requests
-                        .requestMatchers("/posts/new").authenticated() // 게시판에 접근할 때는 인증 필요
+                        .requestMatchers("/posts/new", "/posts/delete/**").authenticated() // 게시판에 접근할 때는 인증 필요
                         .requestMatchers("/", "/css/**", "/script/**", "/images/**", "/static/**", "/posts/**").permitAll()
                         .requestMatchers("/users/signup", "/users/login", "/users/signup_complete").permitAll()
                         .requestMatchers("/touristSpot/**", "/api/**", "/api/tourist-accessible-info", "/touristSpot/Json/**", "/**").permitAll()

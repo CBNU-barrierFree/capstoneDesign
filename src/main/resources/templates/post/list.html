@@ -61,6 +61,11 @@
   </style>
 </head>
 <body>
+
+<script th:if="${errorMessage}" th:inline="javascript">
+  alert([[${errorMessage}]]);
+</script>
+
 <h1>게시글 목록</h1>
 <a href="/posts/new">📝 글 작성하기</a>
 <a class="button-link" href="/">🏠 홈으로</a>

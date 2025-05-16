@@ -68,19 +68,23 @@ public class PostController {
     public String deletePost(@PathVariable Long id, Authentication authentication, RedirectAttributes redirectAttributes) {
         PostEntity post = postRepository.findById(id).orElse(null);
 
-        if (post == null) {
+        // 비로그인 사용자인 경우
+        if (authentication == null || !authentication.isAuthenticated()) {
+            redirectAttributes.addFlashAttribute("errorMessage", "로그인 후 삭제할 수 있습니다.");
             return "redirect:/posts";
         }
 
         CustomUserDetails userDetails = (CustomUserDetails) authentication.getPrincipal();
         String currentNickname = userDetails.getNickname();
 
+        // 작성자 본인인지 확인
         if (!post.getAuthor().equals(currentNickname)) {
             redirectAttributes.addFlashAttribute("errorMessage", "해당 게시물을 삭제할 권한이 없습니다.");
             return "redirect:/posts";
         }
 
         postRepository.deleteById(id);
+        redirectAttributes.addFlashAttribute("errorMessage", "게시글을 삭제하였습니다.");
         return "redirect:/posts";
     }
 }

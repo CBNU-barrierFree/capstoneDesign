@@ -13,6 +13,17 @@
             justify-content: space-between;
             align-items: center;
         }
+        #searchInput {
+            width: 300px;
+            padding: 8px;
+            font-size: 16px;
+            margin-top: 16px;
+        }
+        .nav-buttons {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+        }
         .nav-buttons a {
             color: white;
             text-decoration: none;
@@ -304,7 +315,11 @@
                 position: currentLocation,
                 map: map,
                 title: '현재 내 위치',
-                image: new kakao.maps.MarkerImage('https://t1.daumcdn.net/localimg/localimages/07/mapapidoc/marker_red.png', new kakao.maps.Size(40, 42))
+                image: new kakao.maps.MarkerImage(
+                    'https://t1.daumcdn.net/localimg/localimages/07/mapapidoc/marker_red.png',
+                    new kakao.maps.Size(40, 42),
+                    { offset: new kakao.maps.Point(20, 42) }
+                )
             });
 
             filteredPlaces.sort((a, b) => {
@@ -356,6 +371,7 @@
             document.getElementById('places').innerHTML = '데이터를 불러오는 중 오류가 발생했습니다.';
         });
 </script>
+
 
 </body>
 </html>
