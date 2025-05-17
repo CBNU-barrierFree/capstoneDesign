@@ -54,6 +54,7 @@ public class SecurityConfig {
                                 request.getSession().setAttribute("user", customUser.getUserEntity());
                                 request.getSession().setAttribute("nickname", nickname);
                             }
+                            // 쿠키 로그인
                             Cookie nicknameCookie = new Cookie("nickname", nickname);
                             nicknameCookie.setPath("/");
                             nicknameCookie.setHttpOnly(false);
@@ -91,7 +92,7 @@ public class SecurityConfig {
         return http.build(); // 설정을 기반으로 SecurityFilterChain 빌드
     }
 
-    @Bean // 패스워드 인코더를 Bean으로 등록 (BCrypt 사용)
+    @Bean // 패스워드 인코더를 Bean으로 등록(비크립트)
     public PasswordEncoder passwordEncoder() {
         return new BCryptPasswordEncoder();
     }

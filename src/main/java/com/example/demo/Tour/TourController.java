@@ -21,7 +21,6 @@ public class TourController {
     public Map<String, Object> getAllTours() {
         List<TourEntity> tourList = tourRepository.findAll();
 
-        // 프론트가 기대하는 구조로 포장
         Map<String, Object> itemMap = new HashMap<>();
         itemMap.put("item", tourList); // 관광지 리스트
 
