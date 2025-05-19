@@ -121,7 +121,7 @@
   <div th:if="${session.nickname != null}">
     <form th:action="@{/comments/add}" method="post">
       <input type="hidden" name="postId" th:value="${post.id}" />
-      <textarea name="content" rows="3" placeholder="댓글을 입력하세요" required></textarea><br/>
+      <textarea name="content" rows="3" placeholder="댓글을 입력하세요." required></textarea><br/>
       <button type="submit">댓글 작성</button>
     </form>
   </div>
