@@ -35,7 +35,6 @@ dependencies {
 	runtimeOnly 'mysql:mysql-connector-java:8.0.33'
 	implementation 'com.fasterxml.jackson.dataformat:jackson-dataformat-xml'
 	implementation 'org.thymeleaf.extras:thymeleaf-extras-spring security6'
-	implementation 'org.json:json:20240303'
 }
 
 
