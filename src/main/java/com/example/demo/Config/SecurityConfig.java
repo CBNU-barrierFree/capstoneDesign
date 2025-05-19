@@ -12,7 +12,7 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
 import jakarta.servlet.http.Cookie;
 
-@Configuration // 이 클래스가 Spring 설정 클래스임을 나타냄
+@Configuration // Spring 설정 클래스임을 알려줌
 @EnableWebSecurity // Spring Security 웹 보안을 활성화
 public class SecurityConfig {
 

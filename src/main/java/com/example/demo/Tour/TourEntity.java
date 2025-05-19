@@ -6,7 +6,7 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 
-@Entity // 이 클래스가 JPA 엔티티임을 명시
+@Entity // JPA 엔티티임을 알려줌
 @Getter // Lombok을 이용해 모든 필드의 getter 자동 생성
 @Setter // Lombok을 이용해 모든 필드의 setter 자동 생성
 @NoArgsConstructor // 기본 생성자 추가

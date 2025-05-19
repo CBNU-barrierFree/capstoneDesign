@@ -15,7 +15,7 @@ public class TourService {
     // OpenAPI 기본 URL + 공공 서비스 키 + 고정된 row 수
     private String apiUrl = "http://api.kcisa.kr/openapi/API_TOU_049/request"
             + "?serviceKey=c0957f50-2a47-448e-b35a-7c0aa5415680"
-            + "&numOfRows=1000";
+            + "&numOfRows=100";
 
     // 생성자를 통한 의존성 주입
     public TourService(TourRepository tourRepository, RestTemplate restTemplate) {

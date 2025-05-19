@@ -6,7 +6,7 @@ import org.springframework.context.annotation.Configuration;
 import org.springframework.http.converter.xml.MappingJackson2XmlHttpMessageConverter;
 import org.springframework.web.client.RestTemplate;
 
-@Configuration // 이 클래스가 Spring 설정 클래스임을 나타냄
+@Configuration // Spring 설정 클래스임을 알려줌
 @EnableConfigurationProperties(MyCustomConfig.class) // MyCustomConfig에 @ConfigurationProperties를 활성화하여 바인딩 가능하게 함
 public class AppConfig {
 

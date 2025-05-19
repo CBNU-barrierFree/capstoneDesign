@@ -7,7 +7,7 @@ import org.springframework.stereotype.Repository;
 
 import java.util.Optional;
 
-@Repository // 이 인터페이스가 Spring의 Repository 컴포넌트임을 명시 (빈으로 등록됨)
+@Repository // Spring의 Repository 컴포넌트임을 알려줌 (빈으로 등록)
 public interface TourRepository extends JpaRepository<TourEntity, Long> {
     // title과 address가 모두 일치하는 관광지를 조회 (중복 체크용)
     Optional<TourEntity> findByTitleAndAddress(String title, String address);
