@@ -127,7 +127,7 @@
   </div>
 
   <!-- 비로그인 상태 안내 -->
-  <div sec:authorize="isAnonymous()">
+  <div th:if="${session.nickname == null}">
     <p><a th:href="@{/users/login}">로그인</a> 후 댓글을 작성할 수 있습니다.</p>
   </div>
 
