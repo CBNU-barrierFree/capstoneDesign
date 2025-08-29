@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html lang="ko" xmlns:th="http://www.thymeleaf.org">
+<head>
+  <meta charset="UTF-8">
+  <title>게시글 목록</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background: #f9f9f9;
+      margin: 0;
+      padding: 0;
+    }
+    .container {
+      width: 80%;
+      margin: 50px auto;
+    }
+    .top-bar {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 20px;
+    }
+    .top-bar h1 {
+      margin: 0;
+    }
+    .top-bar a {
+      background: #007bff;
+      color: white;
+      padding: 8px 16px;
+      text-decoration: none;
+      border-radius: 4px;
+    }
+    .top-bar a:hover {
+      background: #0056b3;
+    }
+    ul {
+      list-style: none;
+      padding: 0;
+      background: white;
+      border-radius: 8px;
+      padding: 20px;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    }
+    li {
+      padding: 12px 0;
+      border-bottom: 1px solid #ddd;
+    }
+    li:last-child {
+      border-bottom: none;
+    }
+    li a {
+      font-weight: bold;
+      text-decoration: none;
+      color: #333;
+    }
+    li span {
+      margin-left: 10px;
+      color: #888;
+      font-size: 14px;
+    }
+  </style>
+</head>
+<body>
+
+<script th:if="${errorMessage}" th:inline="javascript">
+  alert([[${errorMessage}]]);
+</script>
+
+<h1>게시글 목록</h1>
+<a href="/posts/new">📝 글 작성하기</a>
+<a class="button-link" href="/">🏠 홈으로</a>
+<ul>
+  <!-- 반복문으로 게시글 리스트 출력 -->
+  <li th:each="post : ${posts}">
+    <a th:href="@{'/posts/' + ${post.id}}" th:text="${post.title}">게시글 제목</a>
+    <span th:text="${post.author}">작성자</span>
+    <span th:text="${post.createdAt}">작성일</span>
+  </li>
+</ul>
+</body>
+</html>
