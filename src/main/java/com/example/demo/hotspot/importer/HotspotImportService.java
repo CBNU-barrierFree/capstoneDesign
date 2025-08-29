@@ -1,5 +1,4 @@
 package com.example.demo.hotspot.importer;
-
 import com.example.demo.hotspot.HotspotEntity;
 import com.example.demo.hotspot.HotspotRepository;
 import com.fasterxml.jackson.databind.JsonNode;
