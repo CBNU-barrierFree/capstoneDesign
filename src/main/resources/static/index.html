@@ -1,250 +1,165 @@
-<!DOCTYPE html>
-<html lang="ko" xmlns:th="http://www.thymeleaf.org">
+<!doctype html>
+<html lang="ko">
 <head>
-    <meta charset="UTF-8" />
+    <meta charset="utf-8" />
     <title>자전거 사고 다발지역</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
     <style>
-        body { margin:0; font-family: Arial, sans-serif; }
-        header {
-          background:#004080; color:#fff; padding:12px 20px;
-          display:flex; justify-content:space-between; align-items:center;
-        }
-        .nav-buttons { display:flex; align-items:center; gap:16px; }
-        .nav-buttons a { color:#fff; text-decoration:none; font-weight:bold; }
-        .nav-buttons a:hover { text-decoration:underline; }
-
-        .toolbar {
-          display:flex; gap:12px; flex-wrap:wrap; align-items:center;
-          padding:12px 20px; border-bottom:1px solid #eee;
-        }
-        .toolbar select { padding:6px 8px; }
-        .badge { font-size:12px; color:#666; margin-left:8px; }
-
-        #map { width:100%; height:420px; margin: 10px 0 0; }
-        #places {
-          display:grid; grid-template-columns: repeat(auto-fill, minmax(300px,1fr));
-          gap:16px; padding:16px 20px;
-        }
-        .place {
-          background:#fff; padding:14px; border-radius:8px;
-          box-shadow:0 2px 4px rgba(0,0,0,0.08); cursor:pointer;
-        }
-        .place:hover { background:#f7fbff; }
-        .pagination { grid-column:1/-1; text-align:center; }
-        .pagination button { margin:4px; padding:6px 12px; cursor:pointer; }
-        .pagination button:disabled { background:#eee; font-weight:bold; }
+        body {margin:0; font-family: system-ui, -apple-system, Segoe UI, Roboto, sans-serif;}
+        header {background:#0a4d9e; color:#fff; padding:16px 20px; font-size:22px; font-weight:700;}
+        .toolbar {display:flex; gap:8px; padding:10px 12px; align-items:center; border-bottom:1px solid #eee;}
+        .toolbar select, .toolbar input, .toolbar button {padding:6px 8px; font-size:14px;}
+        .status {padding:8px 12px; color:#c00; min-height:22px;}
+        #map {width:100%; height:70vh;}
+        .list {padding:10px 12px;}
+        .item {padding:6px 0; border-bottom:1px dashed #ddd; font-size:14px;}
+        .ok {color:#0a7c2f}
+        .muted {color:#666}
     </style>
-    <!-- Kakao Maps SDK -->
+    <!-- Kakao 지도 SDK (본인 JS키로 교체) -->
     <script src="https://dapi.kakao.com/v2/maps/sdk.js?appkey=ec7a521b62d776eb9f9d4089423e63da&libraries=clusterer"></script>
 </head>
-
 <body>
-<header>
-    <h1>🚲 자전거 사고 다발지역</h1>
-    <div class="nav-buttons" id="auth-section">
-        <a href="/posts">📝 게시판</a>
-        <a href="/users/login">🔐 로그인</a>
-        <a href="/users/signup">🧾 회원가입</a>
-    </div>
-</header>
+<header>🚴‍♀️ 자전거 사고 다발지역</header>
 
 <div class="toolbar">
     <label>연도
-        <select id="year" required>
-            <!-- ✅ '전체' 제거, 기본 2023 선택 -->
-            <option value="2023" selected>2023</option>
-            <option value="2024">2024</option>
-            <!-- 필요하면 더 추가 -->
+        <select id="year">
+            <option value="">전체</option>
+            <!-- 필요 연도만 추가 -->
+            <option>2025</option>
+            <option>2024</option>
+            <option>2023</option>
+            <option>2022</option>
+            <option selected>2021</option>
+            <option>2020</option>
+            <option>2019</option>
+            <option>2018</option>
+            <option>2017</option>
         </select>
     </label>
     <label>정렬
         <select id="order">
-            <option value="accidents">사고건수</option>
+            <option value="accidents" selected>사고건수</option>
             <option value="casualties">사상자수</option>
         </select>
     </label>
-    <span class="badge" id="status">현재 범위: 0개</span>
+    <label>표시개수
+        <input id="limit" type="number" value="200" min="1" max="500" style="width:80px" />
+    </label>
+    <button id="btn-refresh">불러오기</button>
+    <span id="ping" class="muted"></span>
 </div>
 
+<div class="status" id="status"></div>
 <div id="map"></div>
-<div id="places">목록을 불러오는 중…</div>
+<div class="list" id="list"></div>
 
 <script>
-    // ----------------- 상태 -----------------
-    let map, clusterer;
-    let allItems = [];
-    let markers = [];
-    let infoWindows = [];
-    let selectedInfo = null;
-    let inFlight;               // AbortController
-    let page = 1;
-    const pageSize = 12;
-
-    // ----------------- 유틸 -----------------
-    function debounce(fn, ms=250){ let t; return (...a)=>{ clearTimeout(t); t=setTimeout(()=>fn(...a),ms); } }
-
-    function getBBoxParam() {
-      const b = map.getBounds(), sw=b.getSouthWest(), ne=b.getNorthEast();
-      return `${sw.getLng()},${sw.getLat()},${ne.getLng()},${ne.getLat()}`; // west,south,east,north
+    // --- 지도 초기화 (서울 시청 근처) ---
+    let map, markers = [];
+    function initMap() {
+      const container = document.getElementById('map');
+      const center = new kakao.maps.LatLng(37.5665, 126.9780);
+      map = new kakao.maps.Map(container, { center, level: 7 });
     }
 
-    async function apiGet(url){
-      if (inFlight) inFlight.abort();
-      inFlight = new AbortController();
-      const r = await fetch(url, {
-        signal: inFlight.signal,
-        headers: { "Accept": "application/json" } // ✅ JSON으로만 응답 받기
-      });
-      if (!r.ok) throw new Error(`HTTP ${r.status}`);
-      return r.json();
+    // --- 지도 영역 → BBOX(w,s,e,n) ---
+    function currentBBox() {
+      const b = map.getBounds();
+      const sw = b.getSouthWest(), ne = b.getNorthEast();
+      const west = sw.getLng(), south = sw.getLat(), east = ne.getLng(), north = ne.getLat();
+      return `${west},${south},${east},${north}`;
     }
 
-    // ----------------- 렌더 -----------------
-    function render() {
-      // 지도 마커 초기화
-      clusterer.clear();
-      markers.forEach(m => m.setMap(null));
-      infoWindows.forEach(iw => iw.close());
-      markers = [];
-      infoWindows = [];
-      selectedInfo = null;
+    // --- 마커/리스트 렌더 ---
+    function clearMarkers() { markers.forEach(m => m.setMap(null)); markers = []; }
+    function render(data) {
+      clearMarkers();
+      const listEl = document.getElementById('list');
+      listEl.innerHTML = '';
+      if (!data || !Array.isArray(data.items)) return;
 
-      allItems.forEach((it, idx) => {
-        const pos = new kakao.maps.LatLng(it.lat, it.lng);
-        const m = new kakao.maps.Marker({ position: pos, title: it.name });
-        const iw = new kakao.maps.InfoWindow({
-          content: `<div style="padding:6px 8px;font-size:13px">
-                      <b>${it.name||'(무명 지점)'}</b><br/>
-                      사고 ${it.accidents}건 · 사상자 ${it.casualties}명<br/>
-                      ${it.year ? `연도 ${it.year}` : ''}
-                    </div>`
+      data.items.forEach(row => {
+        const marker = new kakao.maps.Marker({
+          map, position: new kakao.maps.LatLng(row.lat, row.lng)
         });
-        kakao.maps.event.addListener(m, 'click', () => {
-          if (selectedInfo) selectedInfo.close();
-          iw.open(map, m);
-          selectedInfo = iw;
-          map.panTo(m.getPosition());
-        });
-        kakao.maps.event.addListener(m, 'mouseover', () => { if (selectedInfo!==iw) iw.open(map, m); });
-        kakao.maps.event.addListener(m, 'mouseout',  () => { if (selectedInfo!==iw) iw.close(); });
+        markers.push(marker);
 
-        markers.push(m);
-        infoWindows.push(iw);
+        const div = document.createElement('div');
+        div.className = 'item';
+        div.textContent =
+          `[${row.year ?? '-'}] ${row.name}  ·  사고 ${row.accidents}  ·  사상자 ${row.casualties}`;
+        listEl.appendChild(div);
       });
-      clusterer.addMarkers(markers);
-
-      renderList();
     }
 
-    function renderList(){
-      const container = document.getElementById('places');
-      const total = allItems.length;
-      if (total === 0) {
-        container.innerHTML = `<div style="color:#666">현재 범위에 결과가 없습니다. 지도를 이동하거나 필터를 변경해보세요.</div>`;
-        return;
+    // --- 안전한 fetch(JSON 강제) ---
+    async function fetchJSON(url) {
+      const res = await fetch(url, {headers: {Accept: 'application/json'}});
+      const text = await res.text();                     // 우선 text로 받고
+      if (!res.ok) throw new Error(`HTTP ${res.status} ${text.slice(0, 160)}`);
+      // 서버가 실수로 HTML을 보내면 JSON 파싱 전에 차단
+      if (text.trim().startsWith('<')) {
+        throw new Error('서버가 HTML을 반환했습니다. (JSON 아님)\n' + text.slice(0, 200));
       }
-      const start = (page-1)*pageSize;
-      const items = allItems.slice(start, start+pageSize);
-
-      container.innerHTML = items.map(it => `
-        <div class="place" data-id="${it.id}">
-          <h2>${it.name}</h2>
-          <p>사고 ${it.accidents}건 · 사상자 ${it.casualties}명 ${it.year ? `· ${it.year}년` : ''}</p>
-          <p style="color:#666">(${it.lat.toFixed(5)}, ${it.lng.toFixed(5)})</p>
-        </div>
-      `).join('') + pagination(total);
-
-      // 카드 클릭 → 해당 마커 포커스
-      document.querySelectorAll('.place').forEach((el, i) => {
-        el.addEventListener('click', () => {
-          const idx = start + i;
-          const m = markers[idx], iw = infoWindows[idx];
-          if (!m) return;
-          if (selectedInfo) selectedInfo.close();
-          iw.open(map, m);
-          selectedInfo = iw;
-          map.panTo(m.getPosition());
-        });
-      });
-
-      // 페이지 버튼
-      document.querySelectorAll('.pagination button[data-p]').forEach(btn=>{
-        btn.addEventListener('click', () => { page = Number(btn.dataset.p); renderList(); });
-      });
-    }
-
-    function pagination(total){
-      const pages = Math.ceil(total/pageSize);
-      if (pages <= 1) return '';
-      let html = `<div class="pagination">`;
-      if (page>1) html += `<button data-p="${page-1}">◀</button>`;
-      for(let p=1;p<=pages;p++){
-        html += `<button ${p===page?'disabled':''} data-p="${p}">${p}</button>`;
+      try {
+        return JSON.parse(text);
+      } catch (e) {
+        throw new Error('JSON 파싱 실패: ' + e.message + '\n미리보기: ' + text.slice(0, 200));
       }
-      if (page<pages) html += `<button data-p="${page+1}">▶</button>`;
-      html += `</div>`;
-      return html;
     }
 
-    // ----------------- 데이터 갱신 -----------------
-    async function refresh(){
-      const statusEl = document.getElementById('status');
-      statusEl.textContent = '불러오는 중…';
-
-      const year = document.getElementById('year').value;
-      if (!year) { statusEl.textContent = '연도를 선택하세요.'; return; } // 안전
+    // --- API 호출 ---
+    async function refresh() {
+      const status = document.getElementById('status');
+      status.textContent = '불러오는 중…';
+      const bbox = currentBBox();
+      const year = document.getElementById('year').value.trim();   // "" = 전체
       const order = document.getElementById('order').value;
+      const limit = document.getElementById('limit').value || '200';
 
-      const qs = new URLSearchParams();
-      qs.set('bbox', getBBoxParam());
-      qs.set('year', year);              // ✅ 항상 포함
-      qs.set('order', order);
-      qs.set('limit', '300');
+      const params = new URLSearchParams();
+      params.set('bbox', bbox);
+      params.set('order', order);
+      params.set('limit', limit);
+      if (year !== '') params.set('year', year); // ✅ “전체”일 때는 year 파라미터를 아예 제외
 
-      try{
-        const data = await apiGet(`/api/accident-hotspots?${qs.toString()}`);
-        allItems = data.items || [];
-        page = 1;
-        statusEl.textContent = `현재 범위: ${data.total ?? allItems.length}개`;
-        render();
-      }catch(e){
-        console.error(e);
-        statusEl.textContent = '불러오기에 실패했습니다.';
-        document.getElementById('places').innerHTML =
-          '<div style="color:#c00">데이터 로드 실패</div>';
+      const url = '/api/accident-hotspots?' + params.toString();
+
+      try {
+        const data = await fetchJSON(url);
+        status.innerHTML = `<span class="ok">총 ${data.total}건</span>`;
+        render(data);
+      } catch (err) {
+        console.error(err);
+        status.textContent = '데이터 로드 실패: ' + err.message;
+        clearMarkers();
+        document.getElementById('list').innerHTML = '';
       }
     }
 
-    // ----------------- 초기화 -----------------
-    function initAuth(){
-      const cookies = document.cookie.split(';').map(c=>c.trim());
-      const nick = cookies.find(c=>c.startsWith('nickname='));
-      const el = document.getElementById('auth-section');
-      if (nick && el) {
-        const nickname = decodeURIComponent(nick.split('=')[1]);
-        el.innerHTML = `
-          <a href="/posts">📝 게시판</a>
-          <span><strong>${nickname}</strong> 님</span>
-          <a href="/users/logout">🚪 로그아웃</a>`;
+    // --- 서버 연결 확인(ping) ---
+    async function ping() {
+      try {
+        const r = await fetch('/api/accident-hotspots/ping');
+        if (r.ok) document.getElementById('ping').textContent = '서버 연결 OK';
+        else document.getElementById('ping').textContent = '서버 연결 실패';
+      } catch {
+        document.getElementById('ping').textContent = '서버 연결 실패';
       }
     }
 
-    function init(){
-      initAuth();
-
-      map = new kakao.maps.Map(document.getElementById('map'), {
-        center: new kakao.maps.LatLng(37.5665,126.9780), level: 7
-      });
-      clusterer = new kakao.maps.MarkerClusterer({ map, averageCenter: true, minLevel: 6 });
-
-      kakao.maps.event.addListener(map, 'idle', debounce(refresh, 250));
-      document.getElementById('year').addEventListener('change', refresh);
-      document.getElementById('order').addEventListener('change', refresh);
-
-      refresh(); // 최초 호출
-    }
-
-    document.addEventListener('DOMContentLoaded', init);
+    // --- 이벤트 바인딩 ---
+    window.addEventListener('load', () => {
+      initMap();
+      ping();
+      document.getElementById('btn-refresh').addEventListener('click', refresh);
+      // 지도 이동 후 잠깐 멈추면 자동 새로고침 (원하면 주석 해제)
+      // kakao.maps.event.addListener(map, 'idle', () => { refresh(); });
+      // 최초 1회
+      refresh();
+    });
 </script>
 </body>
 </html>

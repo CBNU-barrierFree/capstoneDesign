@@ -1,10 +1,10 @@
 package com.example.demo.hotspot;
 
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.*;
 import org.springframework.data.repository.query.Param;
 
 import java.util.List;
-import java.util.Optional;
 
 public interface HotspotRepository extends JpaRepository<HotspotEntity, Long> {
 
@@ -19,7 +19,8 @@ public interface HotspotRepository extends JpaRepository<HotspotEntity, Long> {
             @Param("south") double south,
             @Param("east") double east,
             @Param("north") double north,
-            @Param("year") Integer year
+            @Param("year") Integer year,
+            Pageable pageable
     );
 
     @Query("""
@@ -35,6 +36,4 @@ public interface HotspotRepository extends JpaRepository<HotspotEntity, Long> {
             @Param("north") double north,
             @Param("year") Integer year
     );
-
-    Optional<HotspotEntity> findFirstByStatYearAndLatAndLng(int statYear, double lat, double lng);
 }
